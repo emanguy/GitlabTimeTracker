@@ -1,15 +1,27 @@
-package edu.erittenhouse.gitlabtimetracker.ui.timetracking
+package edu.erittenhouse.gitlabtimetracker.ui.view.timetracking
 
 import edu.erittenhouse.gitlabtimetracker.controller.IssueController
+import edu.erittenhouse.gitlabtimetracker.controller.ProjectController
+import edu.erittenhouse.gitlabtimetracker.controller.UserController
+import edu.erittenhouse.gitlabtimetracker.controller.error.GitlabError
+import edu.erittenhouse.gitlabtimetracker.ui.fragment.ErrorFragment
+import edu.erittenhouse.gitlabtimetracker.ui.fragment.UserDisplayFragment
 import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
+import edu.erittenhouse.gitlabtimetracker.ui.util.SuspendingView
 import javafx.geometry.Orientation
 import javafx.scene.layout.Pane
+import kotlinx.coroutines.launch
 import tornadofx.*
+import java.util.logging.Level
 
-class TimeTrackingView : View() {
+class TimeTrackingView : SuspendingView() {
     private var swappedChildren = false
     private var issueListPane by singleAssign<Pane>()
+    private var userDisplay by singleAssign<UserDisplayFragment>()
+
     private val issueController by inject<IssueController>()
+    private val userController by inject<UserController>()
+    private val projectController by inject<ProjectController>()
 
     init {
         issueController.selectedProject.onChange {
@@ -17,6 +29,10 @@ class TimeTrackingView : View() {
                 swappedChildren = true
                 issueListPane.replaceChildren(find<IssueListView>())
             }
+        }
+        userDisplay = find<UserDisplayFragment>()
+        userController.userProperty.onChange { user ->
+            userDisplay.itemProperty.set(user)
         }
     }
 
@@ -26,7 +42,10 @@ class TimeTrackingView : View() {
         splitpane {
             setDividerPositions(0.25)
 
-            add(ProjectListView::class)
+            vbox {
+                add(userDisplay)
+                add(ProjectListView::class)
+            }
             stackpane {
                 style {
                     padding = box(vertical = 0.px, horizontal = 15.percent)
@@ -41,6 +60,15 @@ class TimeTrackingView : View() {
         this.currentWindow?.apply {
             width = 800.0
             height = 600.0
+        }
+        launch {
+            try {
+                userController.loadCurrentUser()
+                projectController.fetchProjects()
+            } catch (e: GitlabError) {
+                log.log(Level.SEVERE, "Something went wrong talking to GitLab.", e)
+                find<ErrorFragment>("errorMessage" to e.message).openModal()
+            }
         }
 
         // Whenever we enter the view, make sure we show the unselected state
