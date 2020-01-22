@@ -1,7 +1,6 @@
 package edu.erittenhouse.gitlabtimetracker.ui.fragment
 
 import edu.erittenhouse.gitlabtimetracker.model.User
-import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles
 import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
 import javafx.beans.property.SimpleStringProperty
 import javafx.scene.shape.Circle
@@ -29,7 +28,9 @@ class UserDisplayFragment : ItemFragment<User>() {
             fitHeight = 40.0
         }
         vbox {
-            addClass(LayoutStyles.typicalSpacing)
+            style {
+                spacing = 8.px
+            }
             text(usersNameProperty)
             text(usersUsernameProperty) {
                 addClass(TypographyStyles.subtitle)
