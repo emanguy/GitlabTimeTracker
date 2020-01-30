@@ -8,8 +8,10 @@ import edu.erittenhouse.gitlabtimetracker.gitlab.error.ConnectivityError
 import edu.erittenhouse.gitlabtimetracker.gitlab.error.InvalidResponseError
 import edu.erittenhouse.gitlabtimetracker.model.User
 import javafx.beans.property.SimpleObjectProperty
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.javafx.JavaFx
+import kotlinx.coroutines.withContext
 import tornadofx.Controller
-import java.lang.Exception
 
 class UserController : Controller() {
     private val credentialController by inject<CredentialController>()
@@ -28,6 +30,9 @@ class UserController : Controller() {
                 else -> throw WTFError("Unknown issue occurred when fetching users. Please contact the devs.", e)
             }
         }
-        userProperty.set(User.fromGitlabUser(currentUser))
+
+        withContext(Dispatchers.JavaFx) {
+            userProperty.set(User.fromGitlabUser(currentUser))
+        }
     }
 }

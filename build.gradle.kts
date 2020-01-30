@@ -29,6 +29,7 @@ dependencies {
     implementation("io.ktor:ktor-client-apache:$ktorVersion")
     implementation("io.ktor:ktor-client-json:$ktorVersion")
     implementation("io.ktor:ktor-client-jackson:$ktorVersion")
+    implementation("joda-time:joda-time:2.10.5")
 
     // Testing dependencies
     testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")

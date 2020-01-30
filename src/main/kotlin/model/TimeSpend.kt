@@ -16,6 +16,8 @@ data class TimeSpend(val totalMinutes: Long) {
         private const val MINUTES_IN_WEEK = 5 * MINUTES_IN_DAY
         private const val MINUTES_IN_MONTH = 4 * MINUTES_IN_WEEK
 
+        val NONE = TimeSpend(0)
+
         fun fromString(timeSpendStr: String): TimeSpend {
             val splitUpString = timeSpendStr.split(" ")
             val totalMinutes = splitUpString.map { convertToMinutes(it) }.reduce { total, value -> total + value }
@@ -85,13 +87,7 @@ data class TimeSpend(val totalMinutes: Long) {
         }
     }
 
-    operator fun plus(minutes: Long): TimeSpend {
-        return if (totalMinutes + minutes < 0) {
-            TimeSpend(0)
-        } else {
-            this.copy(totalMinutes = totalMinutes + minutes)
-        }
-    }
+    operator fun plus(minutes: Long) = this.copy(totalMinutes = totalMinutes + minutes)
     operator fun plus(timeSpent: TimeSpend) = this.plus(timeSpent.totalMinutes)
     operator fun minus(minutes: Long) = this.plus(-minutes)
     operator fun minus(timeSpent: TimeSpend) = this.plus(-timeSpent.totalMinutes)
