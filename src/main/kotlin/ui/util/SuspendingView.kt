@@ -11,7 +11,7 @@ import kotlin.coroutines.CoroutineContext
 
 abstract class SuspendingView(title: String? = null, icon: Node? = null) : View(title, icon), CoroutineScope {
     private val ceh = CoroutineExceptionHandler { context, exception ->
-        this.onCoroutineException(context, exception)
+        this.onUncaughtCoroutineException(context, exception)
     }
     override val coroutineContext = Dispatchers.JavaFx + SupervisorJob() + ceh
 
@@ -44,7 +44,7 @@ abstract class SuspendingView(title: String? = null, icon: Node? = null) : View(
     }
     protected fun <T> ListView<T>.suspendingOnUserSelectOnce(action: suspend CoroutineScope.(T) -> Unit) = suspendingOnUserSelect(1, action)
 
-    open fun onCoroutineException(context: CoroutineContext, exception: Throwable) {
+    open fun onUncaughtCoroutineException(context: CoroutineContext, exception: Throwable) {
         log.warning("Uncaught coroutine exception: ${exception.message}")
     }
 
