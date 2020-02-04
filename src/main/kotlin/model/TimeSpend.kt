@@ -37,6 +37,11 @@ data class TimeSpend(val totalMinutes: Long) {
     }
 
     override fun toString() = buildString {
+        if (totalMinutes == 0L) {
+            append("0m")
+            return@buildString
+        }
+
         var remainingMinutes = totalMinutes
         var somethingAddedBeforeYou = false
 
@@ -91,5 +96,8 @@ data class TimeSpend(val totalMinutes: Long) {
     operator fun plus(timeSpent: TimeSpend) = this.plus(timeSpent.totalMinutes)
     operator fun minus(minutes: Long) = this.plus(-minutes)
     operator fun minus(timeSpent: TimeSpend) = this.plus(-timeSpent.totalMinutes)
+
+    operator fun compareTo(minutes: Long) = (this.totalMinutes - minutes).toInt()
+    operator fun compareTo(other: TimeSpend) = this.compareTo(other.totalMinutes)
 }
 

@@ -19,15 +19,29 @@ class GitlabProjectAPI(private val client: HttpClient) {
      */
     suspend fun listUserMemberProjects(credentials: GitlabCredential): List<GitlabProject> = withContext(Dispatchers.Default) {
         return@withContext catchingErrors {
-            // TODO add pagination
-            client.get<List<GitlabProject>>(credentials.instancePath("/api/v4/projects")) {
-                addGitlabCredentials(credentials)
+            val allProjects = mutableListOf<GitlabProject>()
+            var page = 0
 
-                url {
-                    parameters["simple"] = "true"
-                    parameters["membership"] = "true"
+            while (true) {
+                val pageOfProjects = client.get<List<GitlabProject>>(credentials.instancePath("/api/v4/projects")) {
+                    addGitlabCredentials(credentials)
+
+                    url {
+                        parameters["simple"] = "true"
+                        parameters["membership"] = "true"
+                        parameters["page"] = page.toString()
+                    }
+                }
+
+                if (pageOfProjects.isEmpty()) {
+                    break;
+                } else {
+                    allProjects += pageOfProjects
+                    page++
                 }
             }
+
+            return@catchingErrors allProjects
         }
     }
 }
