@@ -7,6 +7,7 @@ import kotlinx.coroutines.javafx.JavaFx
 import tornadofx.View
 import tornadofx.action
 import tornadofx.onUserSelect
+import java.util.logging.Level
 import kotlin.coroutines.CoroutineContext
 
 abstract class SuspendingView(title: String? = null, icon: Node? = null) : View(title, icon), CoroutineScope {
@@ -45,7 +46,7 @@ abstract class SuspendingView(title: String? = null, icon: Node? = null) : View(
     protected fun <T> ListView<T>.suspendingOnUserSelectOnce(action: suspend CoroutineScope.(T) -> Unit) = suspendingOnUserSelect(1, action)
 
     open fun onUncaughtCoroutineException(context: CoroutineContext, exception: Throwable) {
-        log.warning("Uncaught coroutine exception: ${exception.message}")
+        log.log(Level.WARNING, "Uncaught coroutine exception.", exception)
     }
 
     override fun onUndock() {

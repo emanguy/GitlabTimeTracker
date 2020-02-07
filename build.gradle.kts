@@ -38,6 +38,7 @@ dependencies {
 tasks {
     compileKotlin {
         kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions.freeCompilerArgs = listOf("-Xuse-experimental=kotlin.Experimental")
     }
     compileTestKotlin {
         kotlinOptions.jvmTarget = "1.8"
