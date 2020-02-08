@@ -38,33 +38,51 @@ class TimeRecordingController : SuspendingController() {
     val recordingIssueProperty = SimpleObjectProperty<Issue?>(null)
     val timeSpentProperty = SimpleStringProperty("00:00:00")
 
-    suspend fun startTiming(issue: Issue) {
+    suspend fun startTiming(issue: Issue): IssueWithTime? {
         tickerJobMutex.withLock {
             val currentTickerJobValue = tickerJob
-            if (currentTickerJobValue != null) return
+            val previousTimingResult = if (currentTickerJobValue != null) {
+                // Invoke the unsafe version because we've already acquired the lock
+                unsafeStopTiming()
+            } else {
+                null
+            }
 
             tickerJob = launch { updateTime(issue) }
             recordingIssueProperty.set(issue)
+            return previousTimingResult
         }
     }
 
     suspend fun stopTiming(): IssueWithTime? {
         tickerJobMutex.withLock {
-            val currentTickerJobValue = tickerJob ?: return null
-            val recordedTime = CompletableDeferred<IssueWithTime>()
-            stopTrigger.send(recordedTime)
+            return unsafeStopTiming()
+        }
+    }
 
-            val timingResult = withTimeoutOrNull(2000) {
-                recordedTime.await()
+    /**
+     * Stops the timing job without acquiring the lock first. You MUST acquire the
+     * lock before invoking this function!
+     */
+    private suspend fun unsafeStopTiming(): IssueWithTime? {
+        val currentTickerJobValue = tickerJob ?: return null
+        val recordedTime = CompletableDeferred<IssueWithTime>()
+        stopTrigger.send(recordedTime)
+
+        val timingResult = withTimeoutOrNull(2000) {
+            recordedTime.await()
+        }
+
+        if (timingResult == null) {
+            currentTickerJobValue.cancel()
+            tickerJob = null
+            throw WTFError("Failed to retrieve time from ticker job!")
+        } else {
+            withContext(Dispatchers.JavaFx) {
+                timeSpentProperty.set("00:00:00")
             }
-
-            if (timingResult == null) {
-                currentTickerJobValue.cancel()
-                tickerJob = null
-                throw WTFError("Failed to retrieve time from ticker job!")
-            } else {
-
-            }
+            tickerJob = null
+            return timingResult
         }
     }
 
