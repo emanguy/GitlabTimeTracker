@@ -48,7 +48,23 @@ class IssueController : Controller() {
         }
     }
 
+    @Suppress("IMPLICIT_CAST_TO_ANY")
     suspend fun recordTime(issueWithTime: IssueWithTime) {
+        val credentials = credentialController.credentials ?: throw NoCredentialsError()
+        val success = GitlabAPI.issue.addTimeSpentToIssue(credentials, issueWithTime.issue.projectID, issueWithTime.issue.idInProject, issueWithTime.elapsedTime.toString())
 
+        if (success) {
+            val updatedIssue = issueWithTime.issue.copy(timeSpent = issueWithTime.issue.timeSpent + issueWithTime.elapsedTime)
+
+            withContext(Dispatchers.JavaFx) {
+                val issueIdx = issueList.indexOf(issueWithTime.issue)
+
+                if (issueIdx == -1) {
+                    issueList.add(updatedIssue)
+                } else {
+                    issueList.set(issueIdx, updatedIssue)
+                }
+            }
+        }
     }
 }

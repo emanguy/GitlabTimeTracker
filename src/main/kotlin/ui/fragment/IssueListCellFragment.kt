@@ -23,6 +23,7 @@ class IssueListCellFragment : SuspendingListCellFragment<Issue>() {
     private val timeSummaryProperty = SimpleStringProperty("")
     private val shouldNotShowEstimateProperty = SimpleBooleanProperty(true)
 
+    // TODO if this is currently being recorded, this should initially say "stop"
     private val buttonText = SimpleStringProperty("Start")
 
     private var issueProgress by singleAssign<ProgressBar>()
@@ -35,12 +36,16 @@ class IssueListCellFragment : SuspendingListCellFragment<Issue>() {
         button(buttonText) {
             suspendingAction {
                 val issueSnapshot = issue
-                if (issueSnapshot != null && issueSnapshot == timeRecordingController.recordingIssueProperty.get()) {
+                val toRecord = if (issueSnapshot != null && issueSnapshot != timeRecordingController.recordingIssueProperty.get()) {
                     buttonText.set("Stop")
                     timeRecordingController.startTiming(issueSnapshot)
-                    // TODO take the result from the previous timing if it exists and tell the issue controller to record the time
                 } else {
-                    // Stop timing and tell the issue controller to record the time
+                    buttonText.set("Start")
+                    timeRecordingController.stopTiming()
+                }
+
+                if (toRecord != null) {
+                    issueController.recordTime(toRecord)
                 }
             }
         }
@@ -83,7 +88,7 @@ class IssueListCellFragment : SuspendingListCellFragment<Issue>() {
             handleIssueUpdate(it)
         }
         timeRecordingController.recordingIssueProperty.onChange {
-
+            handleRecordingStateChange(it)
         }
     }
 
@@ -91,6 +96,9 @@ class IssueListCellFragment : SuspendingListCellFragment<Issue>() {
         if (updatedIssue == null) return
 
         issue = updatedIssue
+
+        if (issue == timeRecordingController.recordingIssueProperty.get())
+
         idProperty.set("#${updatedIssue.idInProject}")
         issueTitleProperty.set(updatedIssue.title)
         createTimeProperty.set("Created ${updatedIssue.creationTime.toString("MM/dd/yyyy")}")

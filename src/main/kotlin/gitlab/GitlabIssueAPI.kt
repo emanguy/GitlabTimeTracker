@@ -7,7 +7,7 @@ import edu.erittenhouse.gitlabtimetracker.gitlab.error.catchingErrors
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.post
-import io.ktor.client.response.HttpResponse
+import io.ktor.client.statement.HttpStatement
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -52,18 +52,25 @@ class GitlabIssueAPI(private val client: HttpClient) {
         }
     }
 
-
+    /**
+     * Add an amount of time spend to an issue. Format should be that of model.TimeSpend.toString().
+     *
+     * @param credentials Authentication information for the request.
+     * @param projectID The ID of the project where the issue lives
+     * @param issueIDInProject The project-specific ID of the issue to add time to
+     * @param timeSpent The amount of time spent, formatted the way the /spend command in GitLab is
+     *
+     * @return True if the time spent was successfully applied
+     */
     suspend fun addTimeSpentToIssue(credentials: GitlabCredential, projectID: Int, issueIDInProject: Int, timeSpent: String): Boolean = withContext(Dispatchers.Default) {
-        catchingErrors {
-           val response = client.post<HttpResponse>(credentials.instancePath("/api/v4/projects/$projectID/issues/$issueIDInProject/add_spent_time")) {
-               addGitlabCredentials(credentials)
+       val response = client.post<HttpStatement>(credentials.instancePath("/api/v4/projects/$projectID/issues/$issueIDInProject/add_spent_time")) {
+           addGitlabCredentials(credentials)
 
-               url {
-                   parameters["duration"] = timeSpent
-               }
+           url {
+               parameters["duration"] = timeSpent
            }
+       }
 
-            return@withContext response.status == HttpStatusCode.Created
-        }
+        return@withContext response.execute().status == HttpStatusCode.Created
     }
 }

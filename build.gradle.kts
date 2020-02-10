@@ -17,7 +17,7 @@ application {
 dependencies {
     val coroutinesVersion = "1.3.3"
     val jacksonVersion = "2.10.0"
-    val ktorVersion = "1.2.6"
+    val ktorVersion = "1.3.0"
 
     // Application dependencies
     implementation(kotlin("stdlib-jdk8"))
