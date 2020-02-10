@@ -20,7 +20,7 @@ class GitlabProjectAPI(private val client: HttpClient) {
     suspend fun listUserMemberProjects(credentials: GitlabCredential): List<GitlabProject> = withContext(Dispatchers.Default) {
         return@withContext catchingErrors {
             val allProjects = mutableListOf<GitlabProject>()
-            var page = 0
+            var page = 1
 
             while (true) {
                 val pageOfProjects = client.get<List<GitlabProject>>(credentials.instancePath("/api/v4/projects")) {

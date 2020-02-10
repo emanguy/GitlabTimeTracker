@@ -1,5 +1,7 @@
 package edu.erittenhouse.gitlabtimetracker.model
 
+import org.joda.time.Period
+
 /**
  * Records a duration of time Gitlab-style. Base time unit is minutes, higher levels convert as follows:
  *
@@ -18,6 +20,9 @@ data class TimeSpend(val totalMinutes: Long) {
 
         val NONE = TimeSpend(0)
 
+        fun fromPeriod(period: Period): TimeSpend {
+            return TimeSpend(period.toStandardDuration().standardMinutes)
+        }
         fun fromString(timeSpendStr: String): TimeSpend {
             val splitUpString = timeSpendStr.split(" ")
             val totalMinutes = splitUpString.map { convertToMinutes(it) }.reduce { total, value -> total + value }

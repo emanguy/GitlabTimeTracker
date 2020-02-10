@@ -7,6 +7,7 @@ import edu.erittenhouse.gitlabtimetracker.gitlab.GitlabAPI
 import edu.erittenhouse.gitlabtimetracker.gitlab.error.ConnectivityError
 import edu.erittenhouse.gitlabtimetracker.gitlab.error.InvalidResponseError
 import edu.erittenhouse.gitlabtimetracker.model.Issue
+import edu.erittenhouse.gitlabtimetracker.model.IssueWithTime
 import edu.erittenhouse.gitlabtimetracker.model.Project
 import javafx.beans.property.SimpleObjectProperty
 import kotlinx.coroutines.Dispatchers
@@ -45,5 +46,9 @@ class IssueController : Controller() {
         withContext(Dispatchers.JavaFx) {
             issueList.setAll(issues.map { Issue.fromGitlabDto(it) })
         }
+    }
+
+    suspend fun recordTime(issueWithTime: IssueWithTime) {
+
     }
 }

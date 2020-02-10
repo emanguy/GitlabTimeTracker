@@ -3,6 +3,7 @@ package edu.erittenhouse.gitlabtimetracker.controller
 import edu.erittenhouse.gitlabtimetracker.controller.error.WTFError
 import edu.erittenhouse.gitlabtimetracker.model.Issue
 import edu.erittenhouse.gitlabtimetracker.model.IssueWithTime
+import edu.erittenhouse.gitlabtimetracker.model.TimeSpend
 import edu.erittenhouse.gitlabtimetracker.ui.util.SuspendingController
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
@@ -102,7 +103,7 @@ class TimeRecordingController : SuspendingController() {
             }
 
             if (durationRequest != null) {
-                val forCompletion = IssueWithTime(issue, recordingTime)
+                val forCompletion = IssueWithTime(issue, TimeSpend.fromPeriod(recordingTime))
                 durationRequest.complete(forCompletion)
                 break
             }

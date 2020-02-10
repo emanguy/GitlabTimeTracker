@@ -6,6 +6,9 @@ import edu.erittenhouse.gitlabtimetracker.gitlab.error.InvalidResponseError
 import edu.erittenhouse.gitlabtimetracker.gitlab.error.catchingErrors
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.client.response.HttpResponse
+import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -24,7 +27,7 @@ class GitlabIssueAPI(private val client: HttpClient) {
     suspend fun getIssuesForProject(credentials: GitlabCredential, userID: Int, projectID: Int): List<GitlabIssue> = withContext(Dispatchers.Default) {
         return@withContext catchingErrors {
             val issues = mutableListOf<GitlabIssue>()
-            var page = 0
+            var page = 1
 
             while (true) {
                 val pageOfIssues = client.get<List<GitlabIssue>>(credentials.instancePath("/api/v4/projects/$projectID/issues")) {
@@ -46,6 +49,21 @@ class GitlabIssueAPI(private val client: HttpClient) {
             }
 
             issues
+        }
+    }
+
+
+    suspend fun addTimeSpentToIssue(credentials: GitlabCredential, projectID: Int, issueIDInProject: Int, timeSpent: String): Boolean = withContext(Dispatchers.Default) {
+        catchingErrors {
+           val response = client.post<HttpResponse>(credentials.instancePath("/api/v4/projects/$projectID/issues/$issueIDInProject/add_spent_time")) {
+               addGitlabCredentials(credentials)
+
+               url {
+                   parameters["duration"] = timeSpent
+               }
+           }
+
+            return@withContext response.status == HttpStatusCode.Created
         }
     }
 }
