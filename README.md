@@ -32,3 +32,5 @@ To run:
 To build an executable jar:
 
     ./gradlew shadowJar
+
+The built jar is output in the generated `build/libs` directory.
