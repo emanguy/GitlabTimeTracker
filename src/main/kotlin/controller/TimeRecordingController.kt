@@ -56,10 +56,13 @@ class TimeRecordingController : SuspendingController() {
     }
 
     // TODO for next time: add "now playing" bar at bottom for time tracking and we're done!
-    // TODO make this unset the currently recording issue property
     suspend fun stopTiming(): IssueWithTime? {
         tickerJobMutex.withLock {
-            return unsafeStopTiming()
+            val timedIssue = unsafeStopTiming()
+            withContext(Dispatchers.JavaFx) {
+                recordingIssueProperty.set(null)
+            }
+            return timedIssue
         }
     }
 

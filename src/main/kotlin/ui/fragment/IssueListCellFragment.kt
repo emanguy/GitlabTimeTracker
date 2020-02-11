@@ -23,7 +23,6 @@ class IssueListCellFragment : SuspendingListCellFragment<Issue>() {
     private val timeSummaryProperty = SimpleStringProperty("")
     private val shouldNotShowEstimateProperty = SimpleBooleanProperty(true)
 
-    // TODO if this is currently being recorded, this should initially say "stop"
     private val buttonText = SimpleStringProperty("Start")
 
     private var issueProgress by singleAssign<ProgressBar>()
@@ -96,8 +95,11 @@ class IssueListCellFragment : SuspendingListCellFragment<Issue>() {
         if (updatedIssue == null) return
 
         issue = updatedIssue
-
-        if (issue == timeRecordingController.recordingIssueProperty.get())
+        if (updatedIssue.idInProject == timeRecordingController.recordingIssueProperty.get()?.idInProject) {
+            buttonText.set("Stop")
+        } else {
+            buttonText.set("Start")
+        }
 
         idProperty.set("#${updatedIssue.idInProject}")
         issueTitleProperty.set(updatedIssue.title)

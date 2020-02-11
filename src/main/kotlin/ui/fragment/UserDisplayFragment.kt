@@ -1,6 +1,7 @@
 package edu.erittenhouse.gitlabtimetracker.ui.fragment
 
 import edu.erittenhouse.gitlabtimetracker.model.User
+import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles
 import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
 import javafx.beans.property.SimpleStringProperty
 import javafx.scene.shape.Circle
@@ -22,6 +23,7 @@ class UserDisplayFragment : ItemFragment<User>() {
     }
 
     override val root = hbox {
+        addClass(LayoutStyles.typicalSpacing)
         imageview(usersPhotoURLProperty) {
             clip = Circle(20.0, 20.0, 20.0)
             fitWidth = 40.0

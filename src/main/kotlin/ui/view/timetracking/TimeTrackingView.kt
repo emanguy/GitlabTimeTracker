@@ -36,23 +36,29 @@ class TimeTrackingView : SuspendingView() {
         }
     }
 
-    override val root = splitpane {
-        orientation = Orientation.VERTICAL
-        setDividerPositions(0.8)
-        splitpane {
-            setDividerPositions(0.25)
+    override val root = borderpane {
+        center {
+            splitpane {
+                orientation = Orientation.VERTICAL
+                setDividerPositions(0.8)
+                splitpane {
+                    setDividerPositions(0.25)
 
-            vbox {
-                add(userDisplay)
-                add(ProjectListView::class)
-            }
-            stackpane {
-                style {
-                    padding = box(vertical = 0.px, horizontal = 15.percent)
+                    vbox {
+                        add(userDisplay)
+                        add(ProjectListView::class)
+                    }
+                    stackpane {
+                        style {
+                            padding = box(vertical = 0.px, horizontal = 15.percent)
+                        }
+                        issueListPane = stackpane()
+                    }
                 }
-                issueListPane = stackpane()
             }
         }
+
+        bottom(TimeRecordingBarView::class)
     }
 
     override fun onDock() {
