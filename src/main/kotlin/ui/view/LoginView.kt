@@ -2,20 +2,22 @@ package edu.erittenhouse.gitlabtimetracker.ui.view
 
 import edu.erittenhouse.gitlabtimetracker.controller.CredentialController
 import edu.erittenhouse.gitlabtimetracker.gitlab.GitlabCredential
+import edu.erittenhouse.gitlabtimetracker.ui.fragment.ErrorFragment
 import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles
 import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
-import edu.erittenhouse.gitlabtimetracker.ui.view.timetracking.TimeTrackingView
 import edu.erittenhouse.gitlabtimetracker.ui.util.SuspendingView
+import edu.erittenhouse.gitlabtimetracker.ui.view.timetracking.TimeTrackingView
 import javafx.beans.property.SimpleBooleanProperty
 import kotlinx.coroutines.launch
 import tornadofx.*
+import kotlin.coroutines.CoroutineContext
 
-class LoginView : SuspendingView() {
+class LoginView : SuspendingView("Gitlab Time Tracker - Login") {
     val credentialController: CredentialController by inject()
     val usePreviousCredentialsVisible = SimpleBooleanProperty(false)
 
     override val root = form {
-        addClass(LayoutStyles.typicalSpacing)
+        addClass(LayoutStyles.typicalPaddingAndSpacing)
 
         text("Gitlab Time Tracker") {
             addClass(TypographyStyles.title)
@@ -64,6 +66,11 @@ class LoginView : SuspendingView() {
             width = 500.0
             height = 400.0
         }
+    }
+
+    override fun onUncaughtCoroutineException(context: CoroutineContext, exception: Throwable) {
+        super.onUncaughtCoroutineException(context, exception)
+        find<ErrorFragment>("errorMessage" to "We had an issue: ${exception.message}").openModal()
     }
 }
 

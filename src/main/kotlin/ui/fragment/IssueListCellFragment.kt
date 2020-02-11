@@ -31,7 +31,7 @@ class IssueListCellFragment : SuspendingListCellFragment<Issue>() {
     private val timeRecordingController by inject<TimeRecordingController>()
 
     override val root = hbox {
-        addClass(LayoutStyles.typicalSpacing)
+        addClass(LayoutStyles.typicalPaddingAndSpacing)
         button(buttonText) {
             suspendingAction {
                 val issueSnapshot = issue
@@ -53,6 +53,8 @@ class IssueListCellFragment : SuspendingListCellFragment<Issue>() {
             hgrow = Priority.ALWAYS
 
             hbox {
+                addClass(LayoutStyles.typicalSpacing)
+
                 hyperlink(idProperty) {
                     action {
                         // Make the snapshot local to the listener so we can smartcast w/o worry of concurrent modification
@@ -65,6 +67,8 @@ class IssueListCellFragment : SuspendingListCellFragment<Issue>() {
                 text(issueTitleProperty)
             }
             hbox {
+                addClass(LayoutStyles.typicalSpacing)
+
                 text(createTimeProperty) {
                     addClass(TypographyStyles.subtitle)
                 }

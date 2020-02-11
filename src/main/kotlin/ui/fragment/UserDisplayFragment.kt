@@ -23,7 +23,7 @@ class UserDisplayFragment : ItemFragment<User>() {
     }
 
     override val root = hbox {
-        addClass(LayoutStyles.typicalSpacing)
+        addClass(LayoutStyles.typicalPaddingAndSpacing)
         imageview(usersPhotoURLProperty) {
             clip = Circle(20.0, 20.0, 20.0)
             fitWidth = 40.0

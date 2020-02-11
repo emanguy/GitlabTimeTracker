@@ -6,8 +6,8 @@ import edu.erittenhouse.gitlabtimetracker.model.Issue
 import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles
 import edu.erittenhouse.gitlabtimetracker.ui.util.SuspendingView
 import javafx.beans.property.SimpleStringProperty
+import javafx.geometry.Pos
 import javafx.scene.control.Button
-import javafx.scene.layout.Priority
 import tornadofx.*
 
 class TimeRecordingBarView : SuspendingView() {
@@ -18,11 +18,8 @@ class TimeRecordingBarView : SuspendingView() {
     private val issueController by inject<IssueController>()
 
     override val root = hbox {
-        region {
-            hgrow = Priority.ALWAYS
-        }
-        hbox {
-            addClass(LayoutStyles.typicalSpacing)
+            addClass(LayoutStyles.typicalPaddingAndSpacing)
+            alignment = Pos.CENTER
 
             stopButton = button("Select issue") {
                 isDisable = true
@@ -37,10 +34,6 @@ class TimeRecordingBarView : SuspendingView() {
 
             text(issueNameProperty)
             text(timeRecordingController.timeSpentProperty)
-        }
-        region {
-            hgrow = Priority.ALWAYS
-        }
     }
 
     init {

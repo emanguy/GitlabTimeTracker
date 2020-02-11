@@ -36,6 +36,7 @@ class GitlabIssueAPI(private val client: HttpClient) {
                     url {
                         parameters["assignee_id"] = userID.toString()
                         parameters["state"] = "opened"
+                        parameters["order_by"] = "updated_at"
                         parameters["page"] = page.toString()
                     }
                 }

@@ -36,7 +36,7 @@ class ProjectListCellFragment : ListCellFragment<Project>() {
     }
 
     override val root = vbox {
-        addClass(LayoutStyles.typicalSpacing)
+        addClass(LayoutStyles.typicalPaddingAndSpacing)
         text(projectText) {
             addClass(TypographyStyles.title)
         }

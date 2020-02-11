@@ -13,8 +13,9 @@ import javafx.scene.layout.Pane
 import kotlinx.coroutines.launch
 import tornadofx.*
 import java.util.logging.Level
+import kotlin.coroutines.CoroutineContext
 
-class TimeTrackingView : SuspendingView() {
+class TimeTrackingView : SuspendingView("Gitlab Time Tracker") {
     private var swappedChildren = false
     private var issueListPane by singleAssign<Pane>()
     private var userDisplay by singleAssign<UserDisplayFragment>()
@@ -42,9 +43,13 @@ class TimeTrackingView : SuspendingView() {
                 orientation = Orientation.VERTICAL
                 setDividerPositions(0.8)
                 splitpane {
-                    setDividerPositions(0.25)
+                    setDividerPositions(0.3)
 
                     vbox {
+                        style {
+                            maxWidth = 600.px
+                        }
+
                         add(userDisplay)
                         add(ProjectListView::class)
                     }
@@ -64,8 +69,8 @@ class TimeTrackingView : SuspendingView() {
     override fun onDock() {
         super.onDock()
         this.currentWindow?.apply {
-            width = 800.0
-            height = 600.0
+            width = 1300.0
+            height = 768.0
         }
         launch {
             try {
@@ -84,5 +89,10 @@ class TimeTrackingView : SuspendingView() {
                 addClass(TypographyStyles.title)
             }
         }
+    }
+
+    override fun onUncaughtCoroutineException(context: CoroutineContext, exception: Throwable) {
+        super.onUncaughtCoroutineException(context, exception)
+        find<ErrorFragment>("errorMessage" to "We had an issue: ${exception.message}").openModal()
     }
 }

@@ -1,10 +1,11 @@
 plugins {
     kotlin("jvm") version "1.3.61"
     application
+    id("com.github.johnrengelman.shadow") version "5.2.0"
 }
 
 group = "edu.erittenhouse"
-version = "0.1.0"
+version = "1.0.0"
 
 repositories {
     mavenCentral()

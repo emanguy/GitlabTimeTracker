@@ -8,7 +8,7 @@ class ErrorFragment : Fragment() {
     val errorMessage: String by param()
 
     override val root = vbox {
-        addClass(LayoutStyles.typicalSpacing)
+        addClass(LayoutStyles.typicalPaddingAndSpacing)
 
         text("Whoops!") {
             addClass(TypographyStyles.title)

@@ -29,6 +29,7 @@ class GitlabProjectAPI(private val client: HttpClient) {
                     url {
                         parameters["simple"] = "true"
                         parameters["membership"] = "true"
+                        parameters["order_by"] = "updated_at"
                         parameters["page"] = page.toString()
                     }
                 }
