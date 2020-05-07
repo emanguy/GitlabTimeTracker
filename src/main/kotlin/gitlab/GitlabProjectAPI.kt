@@ -13,7 +13,9 @@ class GitlabProjectAPI(private val client: HttpClient) {
     /**
      * Retrieves a list of the projects a user is a member of from GitLab.
      *
+     * @param credentials The credentials to use to authenticate the request
      * @return The list of Gitlab projects the user is a member of
+     *
      * @throws ConnectivityError if GitLab could not be reached
      * @throws InvalidResponseError if GitLab returned a non-2xx status code
      */

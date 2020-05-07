@@ -18,6 +18,13 @@ class UserController : Controller() {
 
     val userProperty = SimpleObjectProperty<User>()
 
+    /**
+     * Pulls currently signed-in user data from GitLab and stashes in the user property.
+     *
+     * @throws NoCredentialsError if there are no credentials to use in the request
+     * @throws GitlabError if we have trouble talking to GitLab
+     * @throws WTFError if something we didn't account for happens
+     */
     suspend fun loadCurrentUser() {
         val currentCredentials = credentialController.credentials ?: throw NoCredentialsError()
 
@@ -34,5 +41,21 @@ class UserController : Controller() {
         withContext(Dispatchers.JavaFx) {
             userProperty.set(User.fromGitlabUser(currentUser))
         }
+    }
+
+    /**
+     * Retrieves the cached local user or pulls user data from GitLab and returns it.
+     *
+     * @return The data for the currently signed-in user.
+     *
+     * @throws NoCredentialsError if we don't have credentials for the signed in user
+     * @throws GitlabError if we have trouble communicating with GitLab
+     * @throws WTFError if something we didn't handle for occurs
+     */
+    suspend fun getOrLoadCurrentUser(): User {
+        if (this.userProperty.get() == null) {
+            this.loadCurrentUser()
+        }
+        return this.userProperty.get() ?: throw WTFError("Tried to load the user but it's still not there")
     }
 }

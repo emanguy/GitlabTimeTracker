@@ -4,6 +4,7 @@ import edu.erittenhouse.gitlabtimetracker.gitlab.dto.GitlabIssue
 import edu.erittenhouse.gitlabtimetracker.gitlab.error.ConnectivityError
 import edu.erittenhouse.gitlabtimetracker.gitlab.error.InvalidResponseError
 import edu.erittenhouse.gitlabtimetracker.gitlab.error.catchingErrors
+import edu.erittenhouse.gitlabtimetracker.model.filter.*
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.post
@@ -20,11 +21,17 @@ class GitlabIssueAPI(private val client: HttpClient) {
      * @param credentials The credentials that should be used to retrieve the data
      * @param userID The ID of the user the issues should be assigned to
      * @param projectID The ID of the project to look for issues on
+     * @return The list of open issues on the project in order of update time, descending
      *
      * @throws InvalidResponseError when a bad HTTP status is encountered
      * @throws ConnectivityError when GitLab cannot be reached
      */
-    suspend fun getIssuesForProject(credentials: GitlabCredential, userID: Int, projectID: Int): List<GitlabIssue> = withContext(Dispatchers.Default) {
+    suspend fun getIssuesForProject(
+        credentials: GitlabCredential,
+        userID: Int,
+        projectID: Int,
+        milestoneFilter: MilestoneFilterOption = NoMilestoneOptionSelected
+    ): List<GitlabIssue> = withContext(Dispatchers.Default) {
         return@withContext catchingErrors {
             val issues = mutableListOf<GitlabIssue>()
             var page = 1
@@ -38,6 +45,13 @@ class GitlabIssueAPI(private val client: HttpClient) {
                         parameters["state"] = "opened"
                         parameters["order_by"] = "updated_at"
                         parameters["page"] = page.toString()
+
+                        when(milestoneFilter) {
+                            is NoMilestoneOptionSelected -> { /* Don't need to add a parameter, making exhaustive */ }
+                            is HasNoMilestone -> parameters["milestone"] = "None"
+                            is HasAssignedMilestone -> parameters["milestone"] = "Any"
+                            is SelectedMilestone -> parameters["milestone"] = milestoneFilter.milestone.title
+                        }
                     }
                 }
 
