@@ -1,8 +1,6 @@
 package edu.erittenhouse.gitlabtimetracker.gitlab
 
 import edu.erittenhouse.gitlabtimetracker.gitlab.dto.GitlabProject
-import edu.erittenhouse.gitlabtimetracker.gitlab.error.ConnectivityError
-import edu.erittenhouse.gitlabtimetracker.gitlab.error.InvalidResponseError
 import edu.erittenhouse.gitlabtimetracker.gitlab.error.catchingErrors
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -15,9 +13,6 @@ class GitlabProjectAPI(private val client: HttpClient) {
      *
      * @param credentials The credentials to use to authenticate the request
      * @return The list of Gitlab projects the user is a member of
-     *
-     * @throws ConnectivityError if GitLab could not be reached
-     * @throws InvalidResponseError if GitLab returned a non-2xx status code
      */
     suspend fun listUserMemberProjects(credentials: GitlabCredential): List<GitlabProject> = withContext(Dispatchers.Default) {
         return@withContext catchingErrors {
@@ -37,7 +32,7 @@ class GitlabProjectAPI(private val client: HttpClient) {
                 }
 
                 if (pageOfProjects.isEmpty()) {
-                    break;
+                    break
                 } else {
                     allProjects += pageOfProjects
                     page++

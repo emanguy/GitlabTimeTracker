@@ -3,19 +3,17 @@ package edu.erittenhouse.gitlabtimetracker.ui.view.timetracking
 import edu.erittenhouse.gitlabtimetracker.controller.IssueController
 import edu.erittenhouse.gitlabtimetracker.controller.ProjectController
 import edu.erittenhouse.gitlabtimetracker.controller.UserController
-import edu.erittenhouse.gitlabtimetracker.controller.error.GitlabError
-import edu.erittenhouse.gitlabtimetracker.ui.fragment.ErrorFragment
+import edu.erittenhouse.gitlabtimetracker.controller.result.ProjectFetchResult
 import edu.erittenhouse.gitlabtimetracker.ui.fragment.UserDisplayFragment
 import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
-import edu.erittenhouse.gitlabtimetracker.ui.util.SuspendingView
+import edu.erittenhouse.gitlabtimetracker.ui.util.SuspendingIOSafeView
+import edu.erittenhouse.gitlabtimetracker.ui.util.showErrorModal
 import javafx.geometry.Orientation
 import javafx.scene.layout.Pane
 import kotlinx.coroutines.launch
 import tornadofx.*
-import java.util.logging.Level
-import kotlin.coroutines.CoroutineContext
 
-class TimeTrackingView : SuspendingView("Gitlab Time Tracker") {
+class TimeTrackingView : SuspendingIOSafeView("Gitlab Time Tracker") {
     private var swappedChildren = false
     private var issueListPane by singleAssign<Pane>()
     private var userDisplay by singleAssign<UserDisplayFragment>()
@@ -72,13 +70,18 @@ class TimeTrackingView : SuspendingView("Gitlab Time Tracker") {
             width = 1300.0
             height = 768.0
         }
+
+        // Load current user data so we can have it ready and display it above the project list
         launch {
-            try {
-                userController.loadCurrentUser()
-                projectController.fetchProjects()
-            } catch (e: GitlabError) {
-                log.log(Level.SEVERE, "Something went wrong talking to GitLab.", e)
-                find<ErrorFragment>("errorMessage" to e.message).openModal()
+            userController.loadCurrentUser()
+        }
+
+        // Pull in the projects
+        launch {
+            when (projectController.fetchProjects()) {
+                is ProjectFetchResult.ProjectsRetrieved -> { /* Good to go! */ }
+                is ProjectFetchResult.NoCredentials -> showErrorModal("Something's wrong. We couldn't read your credentials " +
+                        "when trying to pull the list of projects.")
             }
         }
 
@@ -89,10 +92,5 @@ class TimeTrackingView : SuspendingView("Gitlab Time Tracker") {
                 addClass(TypographyStyles.title)
             }
         }
-    }
-
-    override fun onUncaughtCoroutineException(context: CoroutineContext, exception: Throwable) {
-        super.onUncaughtCoroutineException(context, exception)
-        find<ErrorFragment>("errorMessage" to "We had an issue: ${exception.message}").openModal()
     }
 }

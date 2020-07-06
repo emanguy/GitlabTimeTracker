@@ -10,7 +10,7 @@ import tornadofx.*
 class UserDisplayFragment : ItemFragment<User>() {
     private val usersNameProperty = SimpleStringProperty("")
     private val usersUsernameProperty = SimpleStringProperty("")
-    private val usersPhotoURLProperty = SimpleStringProperty("")
+    private val usersPhotoURLProperty = SimpleStringProperty("/LoadingPlaceholder.jpg")
 
     init {
         itemProperty.onChange { user ->
@@ -39,4 +39,6 @@ class UserDisplayFragment : ItemFragment<User>() {
             }
         }
     }
+
+
 }

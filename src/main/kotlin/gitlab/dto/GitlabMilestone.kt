@@ -9,5 +9,5 @@ data class GitlabMilestone(
     val projectID: Int,
     val title: String,
     @JsonProperty("due_date")
-    val endDate: String
+    val endDate: String?
 )

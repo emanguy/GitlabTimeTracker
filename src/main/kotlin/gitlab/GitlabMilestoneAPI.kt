@@ -1,8 +1,6 @@
 package edu.erittenhouse.gitlabtimetracker.gitlab
 
 import edu.erittenhouse.gitlabtimetracker.gitlab.dto.GitlabMilestone
-import edu.erittenhouse.gitlabtimetracker.gitlab.error.ConnectivityError
-import edu.erittenhouse.gitlabtimetracker.gitlab.error.InvalidResponseError
 import edu.erittenhouse.gitlabtimetracker.gitlab.error.catchingErrors
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -17,9 +15,6 @@ class GitlabMilestoneAPI(private val client: HttpClient) {
      * @param credentials The credentials to be used to authenticate the request to GitLab
      * @param projectID The project to look the credentials up from
      * @return The list of milestones active on the given project
-     *
-     * @throws InvalidResponseError when a bad HTTP status is encountered
-     * @throws ConnectivityError when GitLab cannot be reached
      */
     suspend fun getMilestonesForProject(credentials: GitlabCredential, projectID: Int): List<GitlabMilestone> = withContext(Dispatchers.Default){
         return@withContext catchingErrors {

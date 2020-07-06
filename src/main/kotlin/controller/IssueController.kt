@@ -1,12 +1,10 @@
 package edu.erittenhouse.gitlabtimetracker.controller
 
-import edu.erittenhouse.gitlabtimetracker.controller.error.GitlabError
-import edu.erittenhouse.gitlabtimetracker.controller.error.NoCredentialsError
-import edu.erittenhouse.gitlabtimetracker.controller.error.NoProjectError
-import edu.erittenhouse.gitlabtimetracker.controller.error.WTFError
+import edu.erittenhouse.gitlabtimetracker.controller.result.NetworkedFilterResult
+import edu.erittenhouse.gitlabtimetracker.controller.result.ProjectSelectResult
+import edu.erittenhouse.gitlabtimetracker.controller.result.TimeRecordResult
+import edu.erittenhouse.gitlabtimetracker.controller.result.UserLoadResult
 import edu.erittenhouse.gitlabtimetracker.gitlab.GitlabAPI
-import edu.erittenhouse.gitlabtimetracker.gitlab.error.ConnectivityError
-import edu.erittenhouse.gitlabtimetracker.gitlab.error.InvalidResponseError
 import edu.erittenhouse.gitlabtimetracker.model.Issue
 import edu.erittenhouse.gitlabtimetracker.model.IssueWithTime
 import edu.erittenhouse.gitlabtimetracker.model.Milestone
@@ -37,58 +35,58 @@ class IssueController : Controller() {
      * Populate the filters and pull in the list of issues by selecting a project.
      *
      * @param project The project to show issues for
-     *
-     * @throws NoCredentialsError if gitlab credentials don't exist yet for some reason
-     * @throws GitlabError if there was a problem talking to GitLab
-     * @throws WTFError if some invalid state occurs or if an unexpected error is thrown
+     * @return Whether or not selecting the project worked, and if not why
      */
-    suspend fun selectProject(project: Project) {
+    suspend fun selectProject(project: Project): ProjectSelectResult {
+        val credentials = credentialController.credentials ?: return ProjectSelectResult.NoCredentials
+
         withContext(Dispatchers.JavaFx) {
             selectedProject.set(project)
         }
 
-        val credentials = credentialController.credentials ?: throw NoCredentialsError()
-        val currentUser = userController.getOrLoadCurrentUser()
+        val currentUser = when(val loadUserResult = userController.getOrLoadCurrentUser()) {
+            is UserLoadResult.GotUser -> loadUserResult.user
+            is UserLoadResult.NotFound -> return ProjectSelectResult.NoUser
+            is UserLoadResult.NoCredentials -> return ProjectSelectResult.NoCredentials
+        }
 
-        try {
-            coroutineScope {
-                val issuesDeferred = async { GitlabAPI.issue.getIssuesForProject(credentials, currentUser.id, project.id) }
-                val milestonesDeferred = async { GitlabAPI.milestone.getMilestonesForProject(credentials, project.id) }
+        coroutineScope {
+            val issuesDeferred = async { GitlabAPI.issue.getIssuesForProject(credentials, currentUser.id, project.id) }
+            val milestonesDeferred = async { GitlabAPI.milestone.getMilestonesForProject(credentials, project.id) }
 
-                val issues = issuesDeferred.await()
-                val milestones = milestonesDeferred.await()
+            val issues = issuesDeferred.await()
+            val milestones = milestonesDeferred.await()
 
-                val orderedConvertedMilestones = milestones.map {
-                    SelectedMilestone(Milestone.fromGitlabDto(it))
-                }.sortedBy { it.milestone.endDate }
+            val orderedConvertedMilestones = milestones.map {
+                SelectedMilestone(Milestone.fromGitlabDto(it))
+            }.sortedBy { it.milestone.endDate }
 
-                withContext(Dispatchers.JavaFx) {
-                    unfilteredIssueList.clear()
-                    unfilteredIssueList.addAll(issues.map { Issue.fromGitlabDto(it) })
-                    issueList.setAll(unfilteredIssueList)
-                    filter.set(IssueFilter())
-                    milestoneFilterOptions.setAll(listOf(NoMilestoneOptionSelected) + orderedConvertedMilestones)
-                }
-            }
-        } catch (e: Exception) {
-            when (e) {
-                is InvalidResponseError -> throw GitlabError("Got a bad status from GitLab: ${e.status}", e)
-                is ConnectivityError -> throw GitlabError("Could not connect to GitLab.", e)
-                else -> throw WTFError("Unknown error occurred when talking to GitLab.", e)
+            withContext(Dispatchers.JavaFx) {
+                unfilteredIssueList.clear()
+                unfilteredIssueList.addAll(issues.map { Issue.fromGitlabDto(it) })
+                issueList.setAll(unfilteredIssueList)
+                filter.set(IssueFilter())
+                milestoneFilterOptions.setAll(listOf(NoMilestoneOptionSelected) + orderedConvertedMilestones)
             }
         }
+        return ProjectSelectResult.IssuesLoaded
     }
 
     suspend fun selectMilestoneFilterOption(milestoneFilter: MilestoneFilterOption) {
 
     }
 
+    /**
+     * Records time for an issue.
+     *
+     * @return A result stating whether or not the recording was successful, and if not why
+     */
     @Suppress("IMPLICIT_CAST_TO_ANY")
-    suspend fun recordTime(issueWithTime: IssueWithTime) {
-        val credentials = credentialController.credentials ?: throw NoCredentialsError()
+    suspend fun recordTime(issueWithTime: IssueWithTime): TimeRecordResult {
+        val credentials = credentialController.credentials ?: return TimeRecordResult.NoCredentials
         val success = GitlabAPI.issue.addTimeSpentToIssue(credentials, issueWithTime.issue.projectID, issueWithTime.issue.idInProject, issueWithTime.elapsedTime.toString())
 
-        if (success) {
+        return if (success) {
             val updatedIssue = issueWithTime.issue.copy(timeSpent = issueWithTime.issue.timeSpent + issueWithTime.elapsedTime)
 
             withContext(Dispatchers.JavaFx) {
@@ -98,37 +96,35 @@ class IssueController : Controller() {
                     issueList[issueIdx] = updatedIssue
                 }
             }
+
+            TimeRecordResult.TimeRecorded
+        } else {
+            TimeRecordResult.TimeFailedToRecord
         }
     }
 
     /**
      * Apply network-based issue updates based on the filter, followed by a local filter apply
      *
-     * @throws NoCredentialsError if there are no credentials to use for network requests
-     * @throws NoProjectError if a project is not currently selected to pull issues from
-     * @throws GitlabError if we have trouble talking to GitLab
-     * @throws WTFError in the event something catastrophic happens that we didn't handle for
+     * @return A result stating whether or not the filter applied successfully, and if not why
      */
-    private suspend fun applyFilterWithNetwork(filter: IssueFilter) {
-        val credentials = credentialController.credentials ?: throw NoCredentialsError()
-        val currentProject = this.selectedProject.get() ?: throw NoProjectError()
-        val currentUser = userController.getOrLoadCurrentUser()
-
-        val filteredIssues = try {
-            GitlabAPI.issue.getIssuesForProject(credentials, currentUser.id, currentProject.id, filter.selectedMilestone)
-        } catch (e: Exception) {
-            when (e) {
-                is InvalidResponseError -> throw GitlabError("Failed to retrieve filtered issue list. Got a bad response from GitLab: ${e.status}", e)
-                is ConnectivityError -> throw GitlabError("Could not reach GitLab.", e)
-                else -> throw WTFError("Something unexpected happened when filtering issues.")
-            }
+    private suspend fun applyFilterWithNetwork(filter: IssueFilter): NetworkedFilterResult {
+        val credentials = credentialController.credentials ?: return NetworkedFilterResult.NoCredentials
+        val currentProject = this.selectedProject.get() ?: return NetworkedFilterResult.NoProject
+        val currentUser = when (val userPullResult = userController.getOrLoadCurrentUser()) {
+            is UserLoadResult.GotUser -> userPullResult.user
+            is UserLoadResult.NotFound -> return NetworkedFilterResult.NoUser
+            is UserLoadResult.NoCredentials -> return NetworkedFilterResult.NoCredentials
         }
+
+        val filteredIssues = GitlabAPI.issue.getIssuesForProject(credentials, currentUser.id, currentProject.id, filter.selectedMilestone)
 
         withContext(Dispatchers.JavaFx) {
             unfilteredIssueList.clear()
             unfilteredIssueList.addAll(filteredIssues.map { Issue.fromGitlabDto(it) })
         }
         applyFilterLocally(filter)
+        return NetworkedFilterResult.FilterApplied
     }
 
     /**

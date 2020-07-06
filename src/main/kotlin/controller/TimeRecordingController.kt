@@ -1,6 +1,6 @@
 package edu.erittenhouse.gitlabtimetracker.controller
 
-import edu.erittenhouse.gitlabtimetracker.controller.error.WTFError
+import edu.erittenhouse.gitlabtimetracker.controller.result.RecordingStopResult
 import edu.erittenhouse.gitlabtimetracker.model.Issue
 import edu.erittenhouse.gitlabtimetracker.model.IssueWithTime
 import edu.erittenhouse.gitlabtimetracker.model.TimeSpend
@@ -17,7 +17,7 @@ import org.joda.time.Instant
 import org.joda.time.Period
 import org.joda.time.format.PeriodFormatterBuilder
 
-@UseExperimental(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class)
 class TimeRecordingController : SuspendingController() {
     // We only want to allow one ticker job to run at a time. No racing to launch the job!
     private val tickerJobMutex = Mutex()
@@ -39,14 +39,14 @@ class TimeRecordingController : SuspendingController() {
     val recordingIssueProperty = SimpleObjectProperty<Issue?>(null)
     val timeSpentProperty = SimpleStringProperty("00:00:00")
 
-    suspend fun startTiming(issue: Issue): IssueWithTime? {
+    suspend fun startTiming(issue: Issue): RecordingStopResult {
         tickerJobMutex.withLock {
             val currentTickerJobValue = tickerJob
             val previousTimingResult = if (currentTickerJobValue != null) {
                 // Invoke the unsafe version because we've already acquired the lock
                 unsafeStopTiming()
             } else {
-                null
+                RecordingStopResult.NoIssueBeingRecorded
             }
 
             tickerJob = launch { updateTime(issue) }
@@ -55,8 +55,7 @@ class TimeRecordingController : SuspendingController() {
         }
     }
 
-    // TODO for next time: add "now playing" bar at bottom for time tracking and we're done!
-    suspend fun stopTiming(): IssueWithTime? {
+    suspend fun stopTiming(): RecordingStopResult {
         tickerJobMutex.withLock {
             val timedIssue = unsafeStopTiming()
             withContext(Dispatchers.JavaFx) {
@@ -70,8 +69,8 @@ class TimeRecordingController : SuspendingController() {
      * Stops the timing job without acquiring the lock first. You MUST acquire the
      * lock before invoking this function!
      */
-    private suspend fun unsafeStopTiming(): IssueWithTime? {
-        val currentTickerJobValue = tickerJob ?: return null
+    private suspend fun unsafeStopTiming(): RecordingStopResult {
+        val currentTickerJobValue = tickerJob ?: return RecordingStopResult.NoIssueBeingRecorded
         val recordedTime = CompletableDeferred<IssueWithTime>()
         stopTrigger.send(recordedTime)
 
@@ -79,16 +78,17 @@ class TimeRecordingController : SuspendingController() {
             recordedTime.await()
         }
 
-        if (timingResult == null) {
+        withContext(Dispatchers.JavaFx) {
+            timeSpentProperty.set("00:00:00")
+        }
+
+        return if (timingResult == null) {
             currentTickerJobValue.cancel()
             tickerJob = null
-            throw WTFError("Failed to retrieve time from ticker job!")
+            RecordingStopResult.RecorderUnresponsive
         } else {
-            withContext(Dispatchers.JavaFx) {
-                timeSpentProperty.set("00:00:00")
-            }
             tickerJob = null
-            return timingResult
+            RecordingStopResult.StoppedTiming(timingResult)
         }
     }
 
