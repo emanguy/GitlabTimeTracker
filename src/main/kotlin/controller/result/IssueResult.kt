@@ -11,10 +11,3 @@ sealed class TimeRecordResult {
     object TimeFailedToRecord : TimeRecordResult()
     object NoCredentials : TimeRecordResult()
 }
-
-sealed class NetworkedFilterResult {
-    object FilterApplied : NetworkedFilterResult()
-    object NoCredentials : NetworkedFilterResult()
-    object NoProject : NetworkedFilterResult()
-    object NoUser : NetworkedFilterResult()
-}

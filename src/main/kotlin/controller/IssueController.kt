@@ -1,6 +1,5 @@
 package edu.erittenhouse.gitlabtimetracker.controller
 
-import edu.erittenhouse.gitlabtimetracker.controller.result.NetworkedFilterResult
 import edu.erittenhouse.gitlabtimetracker.controller.result.ProjectSelectResult
 import edu.erittenhouse.gitlabtimetracker.controller.result.TimeRecordResult
 import edu.erittenhouse.gitlabtimetracker.controller.result.UserLoadResult
@@ -11,8 +10,6 @@ import edu.erittenhouse.gitlabtimetracker.model.Milestone
 import edu.erittenhouse.gitlabtimetracker.model.Project
 import edu.erittenhouse.gitlabtimetracker.model.filter.IssueFilter
 import edu.erittenhouse.gitlabtimetracker.model.filter.MilestoneFilterOption
-import edu.erittenhouse.gitlabtimetracker.model.filter.NoMilestoneOptionSelected
-import edu.erittenhouse.gitlabtimetracker.model.filter.SelectedMilestone
 import javafx.beans.property.SimpleObjectProperty
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -25,11 +22,12 @@ import tornadofx.asObservable
 class IssueController : Controller() {
     private val credentialController by inject<CredentialController>()
     private val userController by inject<UserController>()
+    private val initialFilterOptions = listOf(MilestoneFilterOption.NoMilestoneOptionSelected, MilestoneFilterOption.HasAssignedMilestone, MilestoneFilterOption.HasNoMilestone)
     val selectedProject = SimpleObjectProperty<Project>()
     val issueList = mutableListOf<Issue>().asObservable()
-    val unfilteredIssueList = mutableListOf<Issue>()
-    val milestoneFilterOptions = mutableListOf<MilestoneFilterOption>(NoMilestoneOptionSelected).asObservable()
-    val filter = SimpleObjectProperty(IssueFilter())
+    var unfilteredIssueList = listOf<Issue>()
+    val milestoneFilterOptions = initialFilterOptions.toMutableList().asObservable()
+    val filter = SimpleObjectProperty<IssueFilter>(IssueFilter())
 
     /**
      * Populate the filters and pull in the list of issues by selecting a project.
@@ -58,22 +56,37 @@ class IssueController : Controller() {
             val milestones = milestonesDeferred.await()
 
             val orderedConvertedMilestones = milestones.map {
-                SelectedMilestone(Milestone.fromGitlabDto(it))
+                MilestoneFilterOption.SelectedMilestone(Milestone.fromGitlabDto(it))
             }.sortedBy { it.milestone.endDate }
 
             withContext(Dispatchers.JavaFx) {
-                unfilteredIssueList.clear()
-                unfilteredIssueList.addAll(issues.map { Issue.fromGitlabDto(it) })
+                unfilteredIssueList = issues.map { Issue.fromGitlabDto(it) }
                 issueList.setAll(unfilteredIssueList)
                 filter.set(IssueFilter())
-                milestoneFilterOptions.setAll(listOf(NoMilestoneOptionSelected) + orderedConvertedMilestones)
+                milestoneFilterOptions.setAll(initialFilterOptions + orderedConvertedMilestones)
             }
         }
         return ProjectSelectResult.IssuesLoaded
     }
 
-    suspend fun selectMilestoneFilterOption(milestoneFilter: MilestoneFilterOption) {
+    /**
+     * Updates the current issue filter to filter by the current filter text and updates the list of shown issues.
+     */
+    suspend fun filterByIssueText(issueText: String) {
+        val currentFilter: IssueFilter = filter.value
+        val newFilter = currentFilter.copy(filterText = issueText)
+        filter.value = newFilter
+        applyFilter(newFilter)
+    }
 
+    /**
+     * Updates the current issue filter to filter by the given milestone filter and updates the list of shown issues.
+     */
+    suspend fun selectMilestoneFilterOption(milestoneFilter: MilestoneFilterOption) {
+        val currentFilter: IssueFilter = filter.value
+        val newFilter = currentFilter.copy(selectedMilestone = milestoneFilter)
+        filter.value = newFilter
+        applyFilter(newFilter)
     }
 
     /**
@@ -81,7 +94,6 @@ class IssueController : Controller() {
      *
      * @return A result stating whether or not the recording was successful, and if not why
      */
-    @Suppress("IMPLICIT_CAST_TO_ANY")
     suspend fun recordTime(issueWithTime: IssueWithTime): TimeRecordResult {
         val credentials = credentialController.credentials ?: return TimeRecordResult.NoCredentials
         val success = GitlabAPI.issue.addTimeSpentToIssue(credentials, issueWithTime.issue.projectID, issueWithTime.issue.idInProject, issueWithTime.elapsedTime.toString())
@@ -104,44 +116,32 @@ class IssueController : Controller() {
     }
 
     /**
-     * Apply network-based issue updates based on the filter, followed by a local filter apply
-     *
-     * @return A result stating whether or not the filter applied successfully, and if not why
-     */
-    private suspend fun applyFilterWithNetwork(filter: IssueFilter): NetworkedFilterResult {
-        val credentials = credentialController.credentials ?: return NetworkedFilterResult.NoCredentials
-        val currentProject = this.selectedProject.get() ?: return NetworkedFilterResult.NoProject
-        val currentUser = when (val userPullResult = userController.getOrLoadCurrentUser()) {
-            is UserLoadResult.GotUser -> userPullResult.user
-            is UserLoadResult.NotFound -> return NetworkedFilterResult.NoUser
-            is UserLoadResult.NoCredentials -> return NetworkedFilterResult.NoCredentials
-        }
-
-        val filteredIssues = GitlabAPI.issue.getIssuesForProject(credentials, currentUser.id, currentProject.id, filter.selectedMilestone)
-
-        withContext(Dispatchers.JavaFx) {
-            unfilteredIssueList.clear()
-            unfilteredIssueList.addAll(filteredIssues.map { Issue.fromGitlabDto(it) })
-        }
-        applyFilterLocally(filter)
-        return NetworkedFilterResult.FilterApplied
-    }
-
-    /**
      * Using data already available on the unfiltered list, locally filters the unfiltered issue list
      */
-    private suspend fun applyFilterLocally(filter: IssueFilter) {
+    private suspend fun applyFilter(filter: IssueFilter) {
+        // Pulling this in in the event something else modifies the list
+        val currentIssueList = unfilteredIssueList
+
+        // First filter by milestone
+        val milestoneFilteredIssues = when (filter.selectedMilestone) {
+            is MilestoneFilterOption.NoMilestoneOptionSelected -> currentIssueList.asSequence()
+            is MilestoneFilterOption.HasAssignedMilestone -> currentIssueList.asSequence().filter { it.milestone != null }
+            is MilestoneFilterOption.HasNoMilestone -> currentIssueList.asSequence().filter { it.milestone == null }
+            is MilestoneFilterOption.SelectedMilestone -> currentIssueList.asSequence().filter { it.milestone?.idInProject == filter.selectedMilestone.milestone.idInProject }
+        }
+
+        // Next filter by filter text
         val filteredIssues = if (filter.filterText.isEmpty()) {
-            unfilteredIssueList
+            milestoneFilteredIssues
         } else {
-            unfilteredIssueList.filter {  issue ->
+            milestoneFilteredIssues.filter { issue ->
                 val searchText = "#${issue.idInProject} ${issue.title}"
                 searchText.contains(filter.filterText, ignoreCase = true)
             }
         }
 
         withContext(Dispatchers.JavaFx) {
-            issueList.setAll(filteredIssues)
+            issueList.setAll(filteredIssues.toList())
         }
     }
 }
