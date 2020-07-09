@@ -122,6 +122,7 @@ class IssueListCellFragment : SuspendingIOSafeListCellFragment<Issue>() {
 
         issueProgress = progressbar(progressPercentageProperty) {
             hiddenWhen(shouldNotShowEstimateProperty)
+
         }
     }
 
