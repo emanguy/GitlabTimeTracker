@@ -4,6 +4,7 @@ import edu.erittenhouse.gitlabtimetracker.model.Milestone
 
 sealed class MilestoneFilterOption {
     abstract val milestoneOptionText: String
+    override fun toString() = milestoneOptionText
 
     object NoMilestoneOptionSelected : MilestoneFilterOption() {
         override val milestoneOptionText = "No milestone selected"
@@ -17,6 +18,8 @@ sealed class MilestoneFilterOption {
     data class SelectedMilestone(val milestone: Milestone) : MilestoneFilterOption() {
         override val milestoneOptionText: String
             get() = milestone.title
+
+        override fun toString() = super.toString()
     }
 }
 

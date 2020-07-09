@@ -5,5 +5,5 @@ package edu.erittenhouse.gitlabtimetracker.model.filter
  */
 data class IssueFilter(
     val filterText: String = "",
-    val selectedMilestone: MilestoneFilterOption = NoMilestoneOptionSelected
+    val selectedMilestone: MilestoneFilterOption = MilestoneFilterOption.NoMilestoneOptionSelected
 )

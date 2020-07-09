@@ -2,7 +2,7 @@ package edu.erittenhouse.gitlabtimetracker.gitlab
 
 import edu.erittenhouse.gitlabtimetracker.gitlab.dto.GitlabIssue
 import edu.erittenhouse.gitlabtimetracker.gitlab.error.catchingErrors
-import edu.erittenhouse.gitlabtimetracker.model.filter.*
+import edu.erittenhouse.gitlabtimetracker.model.filter.MilestoneFilterOption
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.post
@@ -25,7 +25,7 @@ class GitlabIssueAPI(private val client: HttpClient) {
         credentials: GitlabCredential,
         userID: Int,
         projectID: Int,
-        milestoneFilter: MilestoneFilterOption = NoMilestoneOptionSelected
+        milestoneFilter: MilestoneFilterOption = MilestoneFilterOption.NoMilestoneOptionSelected
     ): List<GitlabIssue> = withContext(Dispatchers.Default) {
         return@withContext catchingErrors {
             val issues = mutableListOf<GitlabIssue>()
@@ -42,10 +42,10 @@ class GitlabIssueAPI(private val client: HttpClient) {
                         parameters["page"] = page.toString()
 
                         when(milestoneFilter) {
-                            is NoMilestoneOptionSelected -> { /* Don't need to add a parameter, making exhaustive */ }
-                            is HasNoMilestone -> parameters["milestone"] = "None"
-                            is HasAssignedMilestone -> parameters["milestone"] = "Any"
-                            is SelectedMilestone -> parameters["milestone"] = milestoneFilter.milestone.title
+                            is MilestoneFilterOption.NoMilestoneOptionSelected -> { /* Don't need to add a parameter, making exhaustive */ }
+                            is MilestoneFilterOption.HasNoMilestone -> parameters["milestone"] = "None"
+                            is MilestoneFilterOption.HasAssignedMilestone -> parameters["milestone"] = "Any"
+                            is MilestoneFilterOption.SelectedMilestone -> parameters["milestone"] = milestoneFilter.milestone.title
                         }
                     }
                 }

@@ -127,6 +127,7 @@ class IssueListCellFragment : SuspendingIOSafeListCellFragment<Issue>() {
 
     init {
         itemProperty.onChange {
+            root.isVisible = it != null
             updateProgress(it)
         }
     }
