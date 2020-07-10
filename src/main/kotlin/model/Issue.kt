@@ -11,17 +11,19 @@ data class Issue(
     val creationTime: DateTime,
     val url: Url,
     val timeSpent: TimeSpend,
-    val timeEstimate: TimeSpend?
+    val timeEstimate: TimeSpend?,
+    val milestone: Milestone?
 ) {
     companion object {
         fun fromGitlabDto(issue: GitlabIssue) = Issue(
-            issue.idInProject,
-            issue.projectID,
-            issue.title,
-            DateTime.parse(issue.creationTime),
-            Url(issue.url),
-            issue.timeSpend.timeSpent?.let { TimeSpend.fromString(it) } ?: TimeSpend.NONE,
-            issue.timeSpend.timeEstimate?.let { TimeSpend.fromString(it) }
+            idInProject = issue.idInProject,
+            projectID = issue.projectID,
+            title = issue.title,
+            creationTime = DateTime.parse(issue.creationTime),
+            url = Url(issue.url),
+            timeSpent = issue.timeSpend.timeSpent?.let { TimeSpend.fromString(it) } ?: TimeSpend.NONE,
+            timeEstimate = issue.timeSpend.timeEstimate?.let { TimeSpend.fromString(it) },
+            milestone = issue.milestone?.let { Milestone.fromGitlabDto(it) }
         )
     }
 }

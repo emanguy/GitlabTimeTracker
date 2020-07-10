@@ -8,5 +8,6 @@ data class GitlabIssue(
     val title: String,
     @JsonProperty("created_at") val creationTime: String,
     @JsonProperty("web_url") val url: String,
-    @JsonProperty("time_stats") val timeSpend: GitlabTimeSpent
+    @JsonProperty("time_stats") val timeSpend: GitlabTimeSpent,
+    val milestone: GitlabMilestone?
 )

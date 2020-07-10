@@ -1,5 +1,6 @@
 package edu.erittenhouse.gitlabtimetracker.ui.style
 
+import javafx.geometry.Pos
 import tornadofx.Stylesheet
 import tornadofx.box
 import tornadofx.cssclass
@@ -9,6 +10,7 @@ class LayoutStyles : Stylesheet() {
     companion object {
         val typicalPaddingAndSpacing by cssclass()
         val typicalSpacing by cssclass()
+        val centerAlignLeft by cssclass()
     }
 
     init {
@@ -19,6 +21,10 @@ class LayoutStyles : Stylesheet() {
 
         typicalSpacing {
             spacing = 8.px
+        }
+
+        centerAlignLeft {
+            alignment = Pos.CENTER_LEFT
         }
     }
 }

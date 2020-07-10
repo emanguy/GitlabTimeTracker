@@ -1,11 +1,11 @@
 plugins {
-    kotlin("jvm") version "1.3.61"
+    kotlin("jvm") version "1.3.71"
     application
     id("com.github.johnrengelman.shadow") version "5.2.0"
 }
 
 group = "edu.erittenhouse"
-version = "1.0.0"
+version = "1.1.0"
 
 repositories {
     mavenCentral()
@@ -16,13 +16,13 @@ application {
 }
 
 dependencies {
-    val coroutinesVersion = "1.3.3"
+    val coroutinesVersion = "1.3.6"
     val jacksonVersion = "2.10.0"
     val ktorVersion = "1.3.0"
 
     // Application dependencies
     implementation(kotlin("stdlib-jdk8"))
-    implementation("no.tornado:tornadofx:1.7.19")
+    implementation("no.tornado:tornadofx:1.7.20")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-javafx:$coroutinesVersion")
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")

@@ -1,9 +1,8 @@
 package edu.erittenhouse.gitlabtimetracker.gitlab
 
 import edu.erittenhouse.gitlabtimetracker.gitlab.dto.GitlabIssue
-import edu.erittenhouse.gitlabtimetracker.gitlab.error.ConnectivityError
-import edu.erittenhouse.gitlabtimetracker.gitlab.error.InvalidResponseError
 import edu.erittenhouse.gitlabtimetracker.gitlab.error.catchingErrors
+import edu.erittenhouse.gitlabtimetracker.model.filter.MilestoneFilterOption
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.post
@@ -20,11 +19,14 @@ class GitlabIssueAPI(private val client: HttpClient) {
      * @param credentials The credentials that should be used to retrieve the data
      * @param userID The ID of the user the issues should be assigned to
      * @param projectID The ID of the project to look for issues on
-     *
-     * @throws InvalidResponseError when a bad HTTP status is encountered
-     * @throws ConnectivityError when GitLab cannot be reached
+     * @return The list of open issues on the project in order of update time, descending
      */
-    suspend fun getIssuesForProject(credentials: GitlabCredential, userID: Int, projectID: Int): List<GitlabIssue> = withContext(Dispatchers.Default) {
+    suspend fun getIssuesForProject(
+        credentials: GitlabCredential,
+        userID: Int,
+        projectID: Int,
+        milestoneFilter: MilestoneFilterOption = MilestoneFilterOption.NoMilestoneOptionSelected
+    ): List<GitlabIssue> = withContext(Dispatchers.Default) {
         return@withContext catchingErrors {
             val issues = mutableListOf<GitlabIssue>()
             var page = 1
@@ -38,6 +40,13 @@ class GitlabIssueAPI(private val client: HttpClient) {
                         parameters["state"] = "opened"
                         parameters["order_by"] = "updated_at"
                         parameters["page"] = page.toString()
+
+                        when(milestoneFilter) {
+                            is MilestoneFilterOption.NoMilestoneOptionSelected -> { /* Don't need to add a parameter, making exhaustive */ }
+                            is MilestoneFilterOption.HasNoMilestone -> parameters["milestone"] = "None"
+                            is MilestoneFilterOption.HasAssignedMilestone -> parameters["milestone"] = "Any"
+                            is MilestoneFilterOption.SelectedMilestone -> parameters["milestone"] = milestoneFilter.milestone.title
+                        }
                     }
                 }
 
@@ -49,7 +58,7 @@ class GitlabIssueAPI(private val client: HttpClient) {
                 }
             }
 
-            issues
+            return@catchingErrors issues
         }
     }
 
@@ -64,14 +73,16 @@ class GitlabIssueAPI(private val client: HttpClient) {
      * @return True if the time spent was successfully applied
      */
     suspend fun addTimeSpentToIssue(credentials: GitlabCredential, projectID: Int, issueIDInProject: Int, timeSpent: String): Boolean = withContext(Dispatchers.Default) {
-       val response = client.post<HttpStatement>(credentials.instancePath("/api/v4/projects/$projectID/issues/$issueIDInProject/add_spent_time")) {
-           addGitlabCredentials(credentials)
+        val response = catchingErrors {
+            client.post<HttpStatement>(credentials.instancePath("/api/v4/projects/$projectID/issues/$issueIDInProject/add_spent_time")) {
+                addGitlabCredentials(credentials)
 
-           url {
-               parameters["duration"] = timeSpent
-           }
-       }
+                url {
+                    parameters["duration"] = timeSpent
+                }
+            }.execute()
+        }
 
-        return@withContext response.execute().status == HttpStatusCode.Created
+        return@withContext response.status == HttpStatusCode.Created
     }
 }

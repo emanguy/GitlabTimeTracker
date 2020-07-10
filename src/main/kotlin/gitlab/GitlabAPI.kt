@@ -7,4 +7,5 @@ object GitlabAPI {
     val project = GitlabProjectAPI(httpClient)
     val user = GitlabUserAPI(httpClient)
     val issue = GitlabIssueAPI(httpClient)
+    val milestone = GitlabMilestoneAPI(httpClient)
 }
