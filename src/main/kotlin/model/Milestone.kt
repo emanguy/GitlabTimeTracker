@@ -11,10 +11,10 @@ data class Milestone(
 ) {
     companion object {
         fun fromGitlabDto(milestone: GitlabMilestone) = Milestone(
-            milestone.idInProject,
-            milestone.projectID,
-            milestone.title,
-            if (milestone.endDate != null) DateTime.parse(milestone.endDate) else null
+            idInProject = milestone.idInProject,
+            projectID = milestone.projectID,
+            title = milestone.title,
+            endDate = if (milestone.endDate != null) DateTime.parse(milestone.endDate) else null
         )
     }
 }

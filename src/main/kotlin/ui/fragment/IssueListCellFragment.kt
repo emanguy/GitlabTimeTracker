@@ -10,8 +10,6 @@ import edu.erittenhouse.gitlabtimetracker.ui.style.ProgressStyles
 import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
 import edu.erittenhouse.gitlabtimetracker.ui.util.SuspendingIOSafeListCellFragment
 import edu.erittenhouse.gitlabtimetracker.ui.util.showErrorModal
-import javafx.beans.property.SimpleDoubleProperty
-import javafx.beans.property.SimpleStringProperty
 import javafx.scene.control.ProgressBar
 import javafx.scene.layout.Priority
 import tornadofx.*
@@ -28,8 +26,25 @@ class IssueListCellFragment : SuspendingIOSafeListCellFragment<Issue>() {
             ""
         }
     }
-    private val progressPercentageProperty = SimpleDoubleProperty(0.0)
-    private val timeSummaryProperty = SimpleStringProperty("")
+    private val progressPercentageProperty = doubleBinding(itemProperty) {
+        val issueSnapshot = value
+        if (issueSnapshot?.timeEstimate == null) return@doubleBinding 0.0
+
+        val minutesEstimated = issueSnapshot.timeEstimate.totalMinutes
+        val minutesSpent = issueSnapshot.timeSpent.totalMinutes.coerceAtMost(minutesEstimated)
+        return@doubleBinding minutesSpent.toDouble() / minutesEstimated.toDouble()
+    }
+    private val timeSummaryProperty = stringBinding(itemProperty) {
+        if (value == null) return@stringBinding ""
+
+        val timeSummaryFirstHalf = "Spent ${value.timeSpent}"
+
+        return@stringBinding if (value.timeEstimate != null) {
+            "$timeSummaryFirstHalf of estimated ${value.timeEstimate}"
+        } else {
+            timeSummaryFirstHalf
+        }
+    }
     private val shouldNotShowEstimateProperty = booleanBinding(itemProperty) {
         val issueSnapshot = value
 
@@ -134,26 +149,12 @@ class IssueListCellFragment : SuspendingIOSafeListCellFragment<Issue>() {
     }
 
     private fun updateProgress(updatedIssue: Issue?) {
-        if (updatedIssue == null) return
-
-        val timeSummaryFirstHalf = "Spent ${updatedIssue.timeSpent}"
-
-        if (updatedIssue.timeEstimate != null) {
-            val minutesEstimated = updatedIssue.timeEstimate.totalMinutes
-            val minutesSpent = updatedIssue.timeSpent.totalMinutes.coerceAtMost(minutesEstimated)
-            val percentComplete = minutesSpent.toDouble() / minutesEstimated.toDouble()
-
-            timeSummaryProperty.set("$timeSummaryFirstHalf of estimated ${updatedIssue.timeEstimate}")
-            progressPercentageProperty.set(percentComplete)
-
+        if (updatedIssue?.timeEstimate != null) {
             if (updatedIssue.timeSpent > updatedIssue.timeEstimate) {
                 issueProgress.addClass(ProgressStyles.redBar)
             } else {
                 issueProgress.removeClass(ProgressStyles.redBar)
             }
-        } else {
-            timeSummaryProperty.set(timeSummaryFirstHalf)
-            progressPercentageProperty.set(0.0)
         }
     }
 }

@@ -23,9 +23,9 @@ class IssueController : Controller() {
     private val credentialController by inject<CredentialController>()
     private val userController by inject<UserController>()
     private val initialFilterOptions = listOf(MilestoneFilterOption.NoMilestoneOptionSelected, MilestoneFilterOption.HasAssignedMilestone, MilestoneFilterOption.HasNoMilestone)
+    private var unfilteredIssueList = listOf<Issue>()
     val selectedProject = SimpleObjectProperty<Project>()
     val issueList = mutableListOf<Issue>().asObservable()
-    var unfilteredIssueList = listOf<Issue>()
     val milestoneFilterOptions = initialFilterOptions.toMutableList().asObservable()
     val filter = SimpleObjectProperty<IssueFilter>(IssueFilter())
 
@@ -37,15 +37,14 @@ class IssueController : Controller() {
      */
     suspend fun selectProject(project: Project): ProjectSelectResult {
         val credentials = credentialController.credentials ?: return ProjectSelectResult.NoCredentials
-
-        withContext(Dispatchers.JavaFx) {
-            selectedProject.set(project)
-        }
-
         val currentUser = when(val loadUserResult = userController.getOrLoadCurrentUser()) {
             is UserLoadResult.GotUser -> loadUserResult.user
             is UserLoadResult.NotFound -> return ProjectSelectResult.NoUser
             is UserLoadResult.NoCredentials -> return ProjectSelectResult.NoCredentials
+        }
+
+        withContext(Dispatchers.JavaFx) {
+            selectedProject.set(project)
         }
 
         coroutineScope {
@@ -118,7 +117,7 @@ class IssueController : Controller() {
     /**
      * Using data already available on the unfiltered list, locally filters the unfiltered issue list
      */
-    private suspend fun applyFilter(filter: IssueFilter) {
+    private suspend fun applyFilter(filter: IssueFilter) = withContext<Unit>(Dispatchers.Default) {
         // Pulling this in in the event something else modifies the list
         val currentIssueList = unfilteredIssueList
 
@@ -139,9 +138,10 @@ class IssueController : Controller() {
                 searchText.contains(filter.filterText, ignoreCase = true)
             }
         }
+        val filterResult = filteredIssues.toList()
 
         withContext(Dispatchers.JavaFx) {
-            issueList.setAll(filteredIssues.toList())
+            issueList.setAll(filterResult)
         }
     }
 }

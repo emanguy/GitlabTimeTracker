@@ -3,11 +3,13 @@ package edu.erittenhouse.gitlabtimetracker.ui.view
 import edu.erittenhouse.gitlabtimetracker.controller.CredentialController
 import edu.erittenhouse.gitlabtimetracker.gitlab.GitlabCredential
 import edu.erittenhouse.gitlabtimetracker.gitlab.error.CredentialIOError
-import edu.erittenhouse.gitlabtimetracker.ui.fragment.ErrorFragment
+import edu.erittenhouse.gitlabtimetracker.gitlab.error.HttpErrors
 import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles
 import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
 import edu.erittenhouse.gitlabtimetracker.ui.util.SuspendingView
+import edu.erittenhouse.gitlabtimetracker.ui.util.showErrorModal
 import edu.erittenhouse.gitlabtimetracker.ui.view.timetracking.TimeTrackingView
+import edu.erittenhouse.gitlabtimetracker.util.generateMessageForIOExceptions
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleStringProperty
 import kotlinx.coroutines.launch
@@ -72,7 +74,8 @@ class LoginView : SuspendingView("Gitlab Time Tracker - Login") {
         super.onUncaughtCoroutineException(context, exception)
         when (exception) {
             is CredentialIOError -> credentialIssueText.set("${exception.message} If your ${exception.problemFilepath} file still exists, please delete it.")
-            else -> find<ErrorFragment>("errorMessage" to "We had an issue: ${exception.message}").openModal()
+            is HttpErrors -> showErrorModal(generateMessageForIOExceptions(exception))
+            else -> showErrorModal("We had an issue: ${exception.message}")
         }
     }
 

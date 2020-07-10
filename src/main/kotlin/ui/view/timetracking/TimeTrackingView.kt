@@ -4,6 +4,7 @@ import edu.erittenhouse.gitlabtimetracker.controller.IssueController
 import edu.erittenhouse.gitlabtimetracker.controller.ProjectController
 import edu.erittenhouse.gitlabtimetracker.controller.UserController
 import edu.erittenhouse.gitlabtimetracker.controller.result.ProjectFetchResult
+import edu.erittenhouse.gitlabtimetracker.controller.result.UserLoadResult
 import edu.erittenhouse.gitlabtimetracker.ui.fragment.UserDisplayFragment
 import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
 import edu.erittenhouse.gitlabtimetracker.ui.util.SuspendingIOSafeView
@@ -73,7 +74,13 @@ class TimeTrackingView : SuspendingIOSafeView("Gitlab Time Tracker") {
 
         // Load current user data so we can have it ready and display it above the project list
         launch {
-            userController.loadCurrentUser()
+            when (userController.loadCurrentUser()) {
+                is UserLoadResult.GotUser -> { /* Good to go! */ }
+                is UserLoadResult.NotFound -> showErrorModal("There was an issue. We couldn't retrieve your user information. " +
+                        "Please restart the app.")
+                is UserLoadResult.NoCredentials -> showErrorModal("Something went wrong. We didn't retrieve the credentials from the login page," +
+                        " please notify a developer!")
+            }
         }
 
         // Pull in the projects

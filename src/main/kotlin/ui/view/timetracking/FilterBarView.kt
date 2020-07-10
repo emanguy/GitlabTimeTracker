@@ -29,6 +29,11 @@ class FilterBarView : SuspendingIOSafeView() {
             label("Issue name/number: ")
             textfield {
                 filterFieldFlow = textProperty().asFlow().debounce(250)
+                issueController.filter.onChange {
+                    if (it?.filterText != this@textfield.text) {
+                        this@textfield.text = it?.filterText
+                    }
+                }
             }
         }
 
@@ -41,6 +46,11 @@ class FilterBarView : SuspendingIOSafeView() {
                     selectionModel.selectFirst()
                 }
                 milestoneFilterFlow = selectionModel.selectedItemProperty().asFlow().filterNotNull()
+                issueController.filter.onChange {
+                    if (it?.selectedMilestone != this.selectedItem) {
+                        this.selectionModel.select(it?.selectedMilestone)
+                    }
+                }
             }
         }
     }
