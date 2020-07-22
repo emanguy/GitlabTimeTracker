@@ -15,6 +15,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.javafx.JavaFx
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import tornadofx.Controller
 import tornadofx.asObservable
@@ -24,6 +26,7 @@ class IssueController : Controller() {
     private val userController by inject<UserController>()
     private val initialFilterOptions = listOf(MilestoneFilterOption.NoMilestoneOptionSelected, MilestoneFilterOption.HasAssignedMilestone, MilestoneFilterOption.HasNoMilestone)
     private var unfilteredIssueList = listOf<Issue>()
+    private val unfilteredIssueListMutex = Mutex()
     val selectedProject = SimpleObjectProperty<Project>()
     val issueList = mutableListOf<Issue>().asObservable()
     val milestoneFilterOptions = initialFilterOptions.toMutableList().asObservable()
@@ -59,8 +62,10 @@ class IssueController : Controller() {
             }.sortedBy { it.milestone.endDate }
 
             withContext(Dispatchers.JavaFx) {
-                unfilteredIssueList = issues.map { Issue.fromGitlabDto(it) }
-                issueList.setAll(unfilteredIssueList)
+                unfilteredIssueListMutex.withLock {
+                    unfilteredIssueList = issues.map { Issue.fromGitlabDto(it) }
+                    issueList.setAll(unfilteredIssueList)
+                }
                 filter.set(IssueFilter())
                 milestoneFilterOptions.setAll(initialFilterOptions + orderedConvertedMilestones)
             }
@@ -106,6 +111,15 @@ class IssueController : Controller() {
 
                 if (issueIdx != -1) {
                     issueList[issueIdx] = updatedIssue
+                }
+
+                unfilteredIssueListMutex.withLock {
+                    val unfilteredIssueIdx = unfilteredIssueList.indexOf(issueWithTime.issue)
+                    if (issueIdx != -1) {
+                        val mutableListCopy = unfilteredIssueList.toMutableList()
+                        mutableListCopy[unfilteredIssueIdx] = updatedIssue
+                        unfilteredIssueList = mutableListCopy
+                    }
                 }
             }
 
