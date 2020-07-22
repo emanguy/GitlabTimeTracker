@@ -92,7 +92,7 @@ class IssueListCellFragment : SuspendingIOSafeListCellFragment<Issue>() {
                     }
                 }
                 when (timeRecordingResult) {
-                    is TimeRecordResult.TimeRecorded -> { /* Good to go! */ }
+                    is TimeRecordResult.TimeRecorded, is TimeRecordResult.NegligibleTime -> { /* Good to go! */ }
                     is TimeRecordResult.NoCredentials -> showErrorModal("Something's wrong, the app couldn't " +
                             "read your credentials when trying to record the time you spent." +
                             "You may want to manually record your time spent on the issue: /spend ${toRecord.issueWithTime.elapsedTime}")
@@ -111,7 +111,7 @@ class IssueListCellFragment : SuspendingIOSafeListCellFragment<Issue>() {
 
                 hyperlink(idProperty) {
                     action {
-                        // Make the snapshot local to the listener so we can smartcast w/o worry of concurrent modification
+                        // Make the snapshot local to the listener so we can smart cast w/o worry of concurrent modification
                         val issueSnapshot = item
                         if (issueSnapshot != null) {
                             hostServices.showDocument(issueSnapshot.url.toString())

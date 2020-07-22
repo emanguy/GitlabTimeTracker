@@ -38,7 +38,7 @@ class TimeRecordingBarView : SuspendingIOSafeView() {
                         }
                     }
                     when (timeSubmitResult) {
-                        is TimeRecordResult.TimeRecorded -> { /* Good to go! */ }
+                        is TimeRecordResult.TimeRecorded, is TimeRecordResult.NegligibleTime -> { /* Good to go! */ }
                         is TimeRecordResult.TimeFailedToRecord -> showErrorModal("GitLab didn't accept the time you spent on the issue. " +
                                 "If you'd like to keep the amount of time you spent, try running this slash command on the issue: " +
                                 "/spend ${recordResult.issueWithTime.elapsedTime}")

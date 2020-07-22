@@ -30,6 +30,7 @@ class TimeTrackingView : SuspendingIOSafeView("Gitlab Time Tracker") {
                 issueListPane.replaceChildren(find<IssueListView>())
             }
         }
+        @Suppress("RemoveExplicitTypeArguments")
         userDisplay = find<UserDisplayFragment>()
         userController.userProperty.onChange { user ->
             userDisplay.itemProperty.set(user)

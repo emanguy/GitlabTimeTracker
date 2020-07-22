@@ -5,7 +5,7 @@ import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
 import tornadofx.*
 
 class ErrorFragment : Fragment() {
-    val errorMessage: String by param()
+    private val errorMessage: String by param()
 
     override val root = vbox {
         addClass(LayoutStyles.typicalPaddingAndSpacing)
