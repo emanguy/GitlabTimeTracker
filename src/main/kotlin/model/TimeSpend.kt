@@ -28,7 +28,7 @@ data class TimeSpend(val totalMinutes: Long) {
             val totalMinutes = splitUpString.map { convertToMinutes(it) }.reduce { total, value -> total + value }
             return TimeSpend(totalMinutes)
         }
-        fun convertToMinutes(timeComponent: String): Long {
+        private fun convertToMinutes(timeComponent: String): Long {
             return when (timeComponent.last()) {
                 'm' -> timeComponent.substring(0, timeComponent.lastIndex).toLong()
                 'h' -> timeComponent.substring(0, timeComponent.lastIndex).toLong() * MINUTES_IN_HOUR

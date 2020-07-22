@@ -8,6 +8,7 @@ sealed class ProjectSelectResult {
 
 sealed class TimeRecordResult {
     object TimeRecorded : TimeRecordResult()
+    object NegligibleTime : TimeRecordResult()
     object TimeFailedToRecord : TimeRecordResult()
     object NoCredentials : TimeRecordResult()
 }

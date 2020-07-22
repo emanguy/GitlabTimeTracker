@@ -94,6 +94,7 @@ class IssueController : Controller() {
      * @return A result stating whether or not the recording was successful, and if not why
      */
     suspend fun recordTime(issueWithTime: IssueWithTime): TimeRecordResult {
+        if (issueWithTime.elapsedTime.totalMinutes == 0L) return TimeRecordResult.NegligibleTime
         val credentials = credentialController.credentials ?: return TimeRecordResult.NoCredentials
         val success = GitlabAPI.issue.addTimeSpentToIssue(credentials, issueWithTime.issue.projectID, issueWithTime.issue.idInProject, issueWithTime.elapsedTime.toString())
 
