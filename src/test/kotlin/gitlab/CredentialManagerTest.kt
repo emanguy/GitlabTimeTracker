@@ -1,6 +1,6 @@
 package edu.erittenhouse.gitlabtimetracker.gitlab
 
-import edu.erittenhouse.gitlabtimetracker.gitlab.error.CredentialRetrieveError
+import edu.erittenhouse.gitlabtimetracker.gitlab.error.CredentialIOError
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
@@ -47,7 +47,7 @@ class CredentialManagerTest {
             try {
                 manager.getCredential()
                 fail<Unit>("Should have thrown exception")
-            } catch (e: CredentialRetrieveError) {
+            } catch (e: CredentialIOError) {
                 println("Exception thrown.")
             } catch (e: Exception) {
                 fail<Unit>("Threw wrong exception")
@@ -55,4 +55,3 @@ class CredentialManagerTest {
         }
     }
 }
-
