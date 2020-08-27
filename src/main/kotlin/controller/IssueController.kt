@@ -1,5 +1,6 @@
 package edu.erittenhouse.gitlabtimetracker.controller
 
+import edu.erittenhouse.gitlabtimetracker.controller.result.IssueRefreshResult
 import edu.erittenhouse.gitlabtimetracker.controller.result.ProjectSelectResult
 import edu.erittenhouse.gitlabtimetracker.controller.result.TimeRecordResult
 import edu.erittenhouse.gitlabtimetracker.controller.result.UserLoadResult
@@ -32,6 +33,12 @@ class IssueController : Controller() {
     val milestoneFilterOptions = initialFilterOptions.toMutableList().asObservable()
     val filter = SimpleObjectProperty<IssueFilter>(IssueFilter())
 
+    private sealed class IssuesAndMilestonesResult {
+        object NoCredentials : IssuesAndMilestonesResult()
+        object NoUser : IssuesAndMilestonesResult()
+        data class FetchedMilestonesAndIssues(val issues: List<Issue>, val milestones: List<Milestone>) : IssuesAndMilestonesResult()
+    }
+
     /**
      * Populate the filters and pull in the list of issues by selecting a project.
      *
@@ -39,38 +46,55 @@ class IssueController : Controller() {
      * @return Whether or not selecting the project worked, and if not why
      */
     suspend fun selectProject(project: Project): ProjectSelectResult {
-        val credentials = credentialController.credentials ?: return ProjectSelectResult.NoCredentials
-        val currentUser = when(val loadUserResult = userController.getOrLoadCurrentUser()) {
-            is UserLoadResult.GotUser -> loadUserResult.user
-            is UserLoadResult.NotFound -> return ProjectSelectResult.NoUser
-            is UserLoadResult.NoCredentials -> return ProjectSelectResult.NoCredentials
+        val projectIssuesAndMilestones = when (val loadIssMilResult = getIssuesAndMilestonesForProject(project)) {
+            is IssuesAndMilestonesResult.NoUser -> return ProjectSelectResult.NoUser
+            is IssuesAndMilestonesResult.NoCredentials -> return ProjectSelectResult.NoCredentials
+            is IssuesAndMilestonesResult.FetchedMilestonesAndIssues -> loadIssMilResult
         }
+
+        val milestonesAsFilters = projectIssuesAndMilestones.milestones.map { MilestoneFilterOption.SelectedMilestone(it) }
 
         withContext(Dispatchers.JavaFx) {
             selectedProject.set(project)
-        }
-
-        coroutineScope {
-            val issuesDeferred = async { GitlabAPI.issue.getIssuesForProject(credentials, currentUser.id, project.id) }
-            val milestonesDeferred = async { GitlabAPI.milestone.getMilestonesForProject(credentials, project.id) }
-
-            val issues = issuesDeferred.await()
-            val milestones = milestonesDeferred.await()
-
-            val orderedConvertedMilestones = milestones.map {
-                MilestoneFilterOption.SelectedMilestone(Milestone.fromGitlabDto(it))
-            }.sortedBy { it.milestone.endDate }
-
-            withContext(Dispatchers.JavaFx) {
-                unfilteredIssueListMutex.withLock {
-                    unfilteredIssueList = issues.map { Issue.fromGitlabDto(it) }
-                    issueList.setAll(unfilteredIssueList)
-                }
-                filter.set(IssueFilter())
-                milestoneFilterOptions.setAll(initialFilterOptions + orderedConvertedMilestones)
+            unfilteredIssueListMutex.withLock {
+                unfilteredIssueList = projectIssuesAndMilestones.issues
+                issueList.setAll(projectIssuesAndMilestones.issues)
             }
+            filter.set(IssueFilter())
+            milestoneFilterOptions.setAll(initialFilterOptions + milestonesAsFilters)
         }
+
         return ProjectSelectResult.IssuesLoaded
+    }
+
+    suspend fun refreshIssues(): IssueRefreshResult {
+        val project = selectedProject.get() ?: return IssueRefreshResult.NoProject
+        val issuesAndMilestones = when (val issMilFetchResult = getIssuesAndMilestonesForProject(project)) {
+            is IssuesAndMilestonesResult.NoCredentials -> return IssueRefreshResult.NoCredentials
+            is IssuesAndMilestonesResult.NoUser -> return IssueRefreshResult.NoUser
+            is IssuesAndMilestonesResult.FetchedMilestonesAndIssues -> issMilFetchResult
+        }
+
+        val milestonesAsFilters = issuesAndMilestones.milestones.map { MilestoneFilterOption.SelectedMilestone(it) }
+        val currentFilter = filter.get() ?: IssueFilter()
+        val correctedFilter = if (currentFilter.selectedMilestone is MilestoneFilterOption.SelectedMilestone &&
+            !issuesAndMilestones.milestones.any { it == currentFilter.selectedMilestone.milestone }) {
+            currentFilter.copy(selectedMilestone = MilestoneFilterOption.NoMilestoneOptionSelected)
+        } else {
+            currentFilter
+        }
+
+        withContext(Dispatchers.JavaFx) {
+
+            filter.set(correctedFilter)
+            milestoneFilterOptions.setAll(initialFilterOptions + milestonesAsFilters)
+            unfilteredIssueListMutex.withLock {
+                unfilteredIssueList = issuesAndMilestones.issues
+            }
+            applyFilter(correctedFilter)
+        }
+
+        return IssueRefreshResult.RefreshSuccess
     }
 
     /**
@@ -141,7 +165,9 @@ class IssueController : Controller() {
             is MilestoneFilterOption.NoMilestoneOptionSelected -> currentIssueList.asSequence()
             is MilestoneFilterOption.HasAssignedMilestone -> currentIssueList.asSequence().filter { it.milestone != null }
             is MilestoneFilterOption.HasNoMilestone -> currentIssueList.asSequence().filter { it.milestone == null }
-            is MilestoneFilterOption.SelectedMilestone -> currentIssueList.asSequence().filter { it.milestone?.idInProject == filter.selectedMilestone.milestone.idInProject }
+            is MilestoneFilterOption.SelectedMilestone -> currentIssueList.asSequence().filter {
+                it.milestone?.idInProject == filter.selectedMilestone.milestone.idInProject
+            }
         }
 
         // Next filter by filter text
@@ -157,6 +183,25 @@ class IssueController : Controller() {
 
         withContext(Dispatchers.JavaFx) {
             issueList.setAll(filterResult)
+        }
+    }
+
+    private suspend fun getIssuesAndMilestonesForProject(project: Project): IssuesAndMilestonesResult {
+        val credentials = credentialController.credentials ?: return IssuesAndMilestonesResult.NoCredentials
+        val currentUser = when(val loadUserResult = userController.getOrLoadCurrentUser()) {
+            is UserLoadResult.GotUser -> loadUserResult.user
+            is UserLoadResult.NotFound -> return IssuesAndMilestonesResult.NoUser
+            is UserLoadResult.NoCredentials -> return IssuesAndMilestonesResult.NoCredentials
+        }
+
+        return coroutineScope {
+            val issuesDeferred = async { GitlabAPI.issue.getIssuesForProject(credentials, currentUser.id, project.id) }
+            val milestonesDeferred = async { GitlabAPI.milestone.getMilestonesForProject(credentials, project.id) }
+
+            val convertedIssues = issuesDeferred.await().map { Issue.fromGitlabDto(it) }
+            val convertedMilestones = milestonesDeferred.await().map { Milestone.fromGitlabDto(it) }.sortedBy { it.endDate }
+
+            return@coroutineScope IssuesAndMilestonesResult.FetchedMilestonesAndIssues(convertedIssues, convertedMilestones)
         }
     }
 }

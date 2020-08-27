@@ -12,3 +12,10 @@ sealed class TimeRecordResult {
     object TimeFailedToRecord : TimeRecordResult()
     object NoCredentials : TimeRecordResult()
 }
+
+sealed class IssueRefreshResult {
+    object NoProject : IssueRefreshResult()
+    object NoUser : IssueRefreshResult()
+    object NoCredentials : IssueRefreshResult()
+    object RefreshSuccess : IssueRefreshResult()
+}

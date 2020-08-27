@@ -1,9 +1,12 @@
 package edu.erittenhouse.gitlabtimetracker.ui.view.timetracking
 
 import edu.erittenhouse.gitlabtimetracker.controller.IssueController
+import edu.erittenhouse.gitlabtimetracker.controller.result.IssueRefreshResult
 import edu.erittenhouse.gitlabtimetracker.model.filter.MilestoneFilterOption
 import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles
 import edu.erittenhouse.gitlabtimetracker.ui.util.SuspendingIOSafeView
+import edu.erittenhouse.gitlabtimetracker.ui.util.showErrorModal
+import javafx.scene.layout.Priority
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
@@ -50,6 +53,30 @@ class FilterBarView : SuspendingIOSafeView() {
                     if (it?.selectedMilestone != this.selectedItem) {
                         this.selectionModel.select(it?.selectedMilestone)
                     }
+                }
+            }
+        }
+
+        region {
+            hgrow = Priority.ALWAYS
+        }
+        button("Refresh issues") {
+            suspendingAction {
+                this@button.text = "Loading..."
+                val refreshResult = try {
+                    issueController.refreshIssues()
+                } finally {
+                    this@button.text = "Refresh issues"
+                }
+
+                when (refreshResult) {
+                    is IssueRefreshResult.RefreshSuccess -> { /* All good! */ }
+                    is IssueRefreshResult.NoUser -> showErrorModal("Something went wrong. Couldn't read" +
+                            " your GitLab user data to refresh issues.")
+                    is IssueRefreshResult.NoCredentials -> showErrorModal("There was a problem. Couldn't" +
+                            " retrieve your GitLab auth data to identify you while refreshing issues.")
+                    is IssueRefreshResult.NoProject -> showErrorModal("Couldn't refresh issues, no project" +
+                            " is selected.")
                 }
             }
         }
