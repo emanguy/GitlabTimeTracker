@@ -186,6 +186,11 @@ class IssueController : Controller() {
         }
     }
 
+    /**
+     * Fetches the issues & milestones for the given project
+     *
+     * @return A result saying whether or not the refresh was successful, and if not why
+     */
     private suspend fun getIssuesAndMilestonesForProject(project: Project): IssuesAndMilestonesResult {
         val credentials = credentialController.credentials ?: return IssuesAndMilestonesResult.NoCredentials
         val currentUser = when(val loadUserResult = userController.getOrLoadCurrentUser()) {
