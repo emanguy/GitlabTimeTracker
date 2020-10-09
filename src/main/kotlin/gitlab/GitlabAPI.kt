@@ -1,11 +1,13 @@
 package edu.erittenhouse.gitlabtimetracker.gitlab
 
 import edu.erittenhouse.gitlabtimetracker.util.httpClient
+import tornadofx.Component
+import tornadofx.ScopedInstance
 
-object GitlabAPI {
-    val test = GitlabTest(httpClient)
-    val project = GitlabProjectAPI(httpClient)
-    val user = GitlabUserAPI(httpClient)
-    val issue = GitlabIssueAPI(httpClient)
-    val milestone = GitlabMilestoneAPI(httpClient)
+open class GitlabAPI : Component(), ScopedInstance {
+    open val test: IGitlabTest = GitlabTest(httpClient)
+    open val project: IGitlabProjectAPI = GitlabProjectAPI(httpClient)
+    open val user: IGitlabUserAPI = GitlabUserAPI(httpClient)
+    open val issue: IGitlabIssueAPI = GitlabIssueAPI(httpClient)
+    open val milestone: IGitlabMilestoneAPI = GitlabMilestoneAPI(httpClient)
 }

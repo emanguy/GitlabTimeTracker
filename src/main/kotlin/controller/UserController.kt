@@ -10,6 +10,7 @@ import kotlinx.coroutines.withContext
 import tornadofx.Controller
 
 class UserController : Controller() {
+    private val gitlabAPI by inject<GitlabAPI>()
     private val credentialController by inject<CredentialController>()
 
     val userProperty = SimpleObjectProperty<User>()
@@ -20,7 +21,7 @@ class UserController : Controller() {
     suspend fun loadCurrentUser(): UserLoadResult {
         val currentCredentials = credentialController.credentials ?: return UserLoadResult.NoCredentials
 
-        val currentUser = GitlabAPI.user.getCurrentUser(currentCredentials) ?: return UserLoadResult.NotFound
+        val currentUser = gitlabAPI.user.getCurrentUser(currentCredentials) ?: return UserLoadResult.NotFound
         val userModel = User.fromGitlabUser(currentUser)
 
         withContext(Dispatchers.JavaFx) {

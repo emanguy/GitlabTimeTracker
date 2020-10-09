@@ -6,7 +6,8 @@ import edu.erittenhouse.gitlabtimetracker.gitlab.GitlabCredential
 import tornadofx.Controller
 
 class CredentialController : Controller() {
-    private val credentialManager = CredentialManager()
+    private val gitlabAPI by inject<GitlabAPI>()
+    private val credentialManager = if (params["testMode"] == true) CredentialManager("./.gtt") else CredentialManager()
     var credentials: GitlabCredential? = null
         private set
 
@@ -18,7 +19,7 @@ class CredentialController : Controller() {
     }
 
     suspend fun tryAddCredentials(credential: GitlabCredential): Boolean {
-        val credentialsWork = GitlabAPI.test.testCredentials(credential)
+        val credentialsWork = gitlabAPI.test.testCredentials(credential)
         if (!credentialsWork) {
             return false
         }

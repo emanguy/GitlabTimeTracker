@@ -10,6 +10,7 @@ import tornadofx.Controller
 import tornadofx.asObservable
 
 class ProjectController : Controller() {
+    private val gitlabAPI by inject<GitlabAPI>()
     private val credentialController by inject<CredentialController>()
     val projects = mutableListOf<Project>().asObservable()
 
@@ -18,7 +19,7 @@ class ProjectController : Controller() {
      */
     suspend fun fetchProjects(): ProjectFetchResult {
         val credentials = credentialController.credentials ?: return ProjectFetchResult.NoCredentials
-        val fullProjectList = GitlabAPI.project.listUserMemberProjects(credentials).map { Project.fromGitlabDto(it) }
+        val fullProjectList = gitlabAPI.project.listUserMemberProjects(credentials).map { Project.fromGitlabDto(it) }
 
         withContext(Dispatchers.JavaFx) {
             projects.setAll(fullProjectList)
