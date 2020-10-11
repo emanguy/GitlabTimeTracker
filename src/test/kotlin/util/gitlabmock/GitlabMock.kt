@@ -14,6 +14,16 @@ import kotlinx.coroutines.sync.withLock
 class GitlabMock(var projects: List<ProjectMock> = emptyList(), var users: List<AuthedUser> = emptyList()) : IGitlabTest, IGitlabProjectAPI, IGitlabMilestoneAPI, IGitlabIssueAPI, IGitlabUserAPI {
     private val projectListLock = Mutex()
 
+    /**
+     * Fetches the issue with the given ID within the specified project.
+     */
+    fun fetchIssue(projectID: Int, issueIDInProject: Int): GitlabIssue? {
+        return projects.firstOrNull { it.projectData.id == projectID }
+            ?.issues
+            ?.firstOrNull { it.issue.idInProject == issueIDInProject }
+            ?.issue
+    }
+
     override suspend fun testCredentials(credentials: GitlabCredential): Boolean {
         val localUsersSnapshot = users
         return localUsersSnapshot.any { credentials.personalAccessToken in it.apiCredentials }
@@ -81,7 +91,10 @@ class GitlabMock(var projects: List<ProjectMock> = emptyList(), var users: List<
         return true
     }
 
-    override suspend fun getCurrentUser(credentials: GitlabCredential): GitlabUser? {
-        return users.find { credentials.personalAccessToken in it.apiCredentials }?.userData
+    override suspend fun getCurrentUser(credentials: GitlabCredential): GitlabUser {
+        if (!testCredentials(credentials)) throw HttpErrors.InvalidResponseError(401, "Bad credentials")
+
+        return users.find { credentials.personalAccessToken in it.apiCredentials }?.userData ?:
+            error("Something's wonky, the credential test passed but we couldn't find the appropriate user.")
     }
 }

@@ -3,6 +3,7 @@ package edu.erittenhouse.gitlabtimetracker.controller
 import edu.erittenhouse.gitlabtimetracker.gitlab.GitlabAPI
 import edu.erittenhouse.gitlabtimetracker.gitlab.GitlabCredential
 import edu.erittenhouse.gitlabtimetracker.gitlab.dto.GitlabUser
+import edu.erittenhouse.gitlabtimetracker.util.CREDENTIAL_FILE_LOCATION
 import edu.erittenhouse.gitlabtimetracker.util.gitlabmock.AuthedUser
 import edu.erittenhouse.gitlabtimetracker.util.gitlabmock.GitlabMock
 import edu.erittenhouse.gitlabtimetracker.util.gitlabmock.GitlabMockAPI
@@ -29,12 +30,13 @@ class CredentialControllerTest {
     ))
     private val scope = Scope().apply {
         setInScope(GitlabMockAPI(gitlabState), this, GitlabAPI::class)
+        setInScope(StorageConfig(CREDENTIAL_FILE_LOCATION), this)
     }
-    private val controller = find<CredentialController>(scope, params = mapOf("testMode" to true))
+    private val controller = find<CredentialController>(scope)
 
     @AfterEach
     fun `Remove credentials file`() {
-        File("./.gtt").delete()
+        File(CREDENTIAL_FILE_LOCATION).delete()
     }
 
     @Test

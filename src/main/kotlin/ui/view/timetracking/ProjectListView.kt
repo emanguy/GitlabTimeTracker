@@ -21,7 +21,6 @@ class ProjectListView : SuspendingIOSafeView() {
             when (issueController.selectProject(it)) {
                 is ProjectSelectResult.IssuesLoaded -> { /* Don't need to do anything, working as intended */ }
                 is ProjectSelectResult.NoCredentials -> showErrorModal("Something's wrong, the time tracker couldn't read your credentials when pulling projects")
-                is ProjectSelectResult.NoUser -> showErrorModal("Something's wrong, we couldn't read the details of your GitLab User.")
             }
         }
     }

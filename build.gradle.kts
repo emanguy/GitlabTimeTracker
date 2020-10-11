@@ -16,13 +16,13 @@ application {
 }
 
 dependencies {
-    val coroutinesVersion = "1.3.6"
+    val coroutinesVersion = "1.3.9"
     val jacksonVersion = "2.10.0"
-    val ktorVersion = "1.3.0"
+    val ktorVersion = "1.4.1"
 
     // Application dependencies
-    implementation(kotlin("stdlib-jdk8"))
     implementation("no.tornado:tornadofx:1.7.20")
+    implementation(kotlin("reflect"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-javafx:$coroutinesVersion")
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")

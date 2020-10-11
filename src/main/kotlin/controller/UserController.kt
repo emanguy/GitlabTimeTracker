@@ -21,7 +21,7 @@ class UserController : Controller() {
     suspend fun loadCurrentUser(): UserLoadResult {
         val currentCredentials = credentialController.credentials ?: return UserLoadResult.NoCredentials
 
-        val currentUser = gitlabAPI.user.getCurrentUser(currentCredentials) ?: return UserLoadResult.NotFound
+        val currentUser = gitlabAPI.user.getCurrentUser(currentCredentials)
         val userModel = User.fromGitlabUser(currentUser)
 
         withContext(Dispatchers.JavaFx) {

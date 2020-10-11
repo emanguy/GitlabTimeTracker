@@ -71,8 +71,6 @@ class FilterBarView : SuspendingIOSafeView() {
 
                 when (refreshResult) {
                     is IssueRefreshResult.RefreshSuccess -> { /* All good! */ }
-                    is IssueRefreshResult.NoUser -> showErrorModal("Something went wrong. Couldn't read" +
-                            " your GitLab user data to refresh issues.")
                     is IssueRefreshResult.NoCredentials -> showErrorModal("There was a problem. Couldn't" +
                             " retrieve your GitLab auth data to identify you while refreshing issues.")
                     is IssueRefreshResult.NoProject -> showErrorModal("Couldn't refresh issues, no project" +

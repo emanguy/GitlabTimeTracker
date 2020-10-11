@@ -36,7 +36,6 @@ class IssueController : Controller() {
 
     private sealed class IssuesAndMilestonesResult {
         object NoCredentials : IssuesAndMilestonesResult()
-        object NoUser : IssuesAndMilestonesResult()
         data class FetchedMilestonesAndIssues(val issues: List<Issue>, val milestones: List<Milestone>) : IssuesAndMilestonesResult()
     }
 
@@ -48,7 +47,6 @@ class IssueController : Controller() {
      */
     suspend fun selectProject(project: Project): ProjectSelectResult {
         val projectIssuesAndMilestones = when (val loadIssMilResult = getIssuesAndMilestonesForProject(project)) {
-            is IssuesAndMilestonesResult.NoUser -> return ProjectSelectResult.NoUser
             is IssuesAndMilestonesResult.NoCredentials -> return ProjectSelectResult.NoCredentials
             is IssuesAndMilestonesResult.FetchedMilestonesAndIssues -> loadIssMilResult
         }
@@ -72,7 +70,6 @@ class IssueController : Controller() {
         val project = selectedProject.get() ?: return IssueRefreshResult.NoProject
         val issuesAndMilestones = when (val issMilFetchResult = getIssuesAndMilestonesForProject(project)) {
             is IssuesAndMilestonesResult.NoCredentials -> return IssueRefreshResult.NoCredentials
-            is IssuesAndMilestonesResult.NoUser -> return IssueRefreshResult.NoUser
             is IssuesAndMilestonesResult.FetchedMilestonesAndIssues -> issMilFetchResult
         }
 
@@ -196,7 +193,6 @@ class IssueController : Controller() {
         val credentials = credentialController.credentials ?: return IssuesAndMilestonesResult.NoCredentials
         val currentUser = when(val loadUserResult = userController.getOrLoadCurrentUser()) {
             is UserLoadResult.GotUser -> loadUserResult.user
-            is UserLoadResult.NotFound -> return IssuesAndMilestonesResult.NoUser
             is UserLoadResult.NoCredentials -> return IssuesAndMilestonesResult.NoCredentials
         }
 

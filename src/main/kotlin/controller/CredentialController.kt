@@ -7,7 +7,7 @@ import tornadofx.Controller
 
 class CredentialController : Controller() {
     private val gitlabAPI by inject<GitlabAPI>()
-    private val credentialManager = if (params["testMode"] == true) CredentialManager("./.gtt") else CredentialManager()
+    private val credentialManager = CredentialManager(find<StorageConfig>().fileLocation)
     var credentials: GitlabCredential? = null
         private set
 
