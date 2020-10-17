@@ -69,7 +69,7 @@ class ProjectControllerTest {
     )
     private val mockScope = Scope().apply {
         setInScope(GitlabMockAPI(gitlabState), this, GitlabAPI::class)
-        setInScope(StorageConfig(CREDENTIAL_FILE_LOCATION))
+        setInScope(StorageConfig(CREDENTIAL_FILE_LOCATION), this)
     }
 
     private val credentialController = find<CredentialController>(mockScope)
