@@ -3,20 +3,21 @@ package edu.erittenhouse.gitlabtimetracker.controller
 import edu.erittenhouse.gitlabtimetracker.controller.result.IssueRefreshResult
 import edu.erittenhouse.gitlabtimetracker.controller.result.ProjectSelectResult
 import edu.erittenhouse.gitlabtimetracker.controller.result.TimeRecordResult
-import edu.erittenhouse.gitlabtimetracker.gitlab.GitlabAPI
 import edu.erittenhouse.gitlabtimetracker.gitlab.GitlabCredential
 import edu.erittenhouse.gitlabtimetracker.gitlab.dto.*
 import edu.erittenhouse.gitlabtimetracker.model.*
 import edu.erittenhouse.gitlabtimetracker.model.filter.MilestoneFilterOption
 import edu.erittenhouse.gitlabtimetracker.util.CREDENTIAL_FILE_LOCATION
-import edu.erittenhouse.gitlabtimetracker.util.gitlabmock.*
+import edu.erittenhouse.gitlabtimetracker.util.generateTestScope
+import edu.erittenhouse.gitlabtimetracker.util.gitlabmock.AssignedIssueMock
+import edu.erittenhouse.gitlabtimetracker.util.gitlabmock.AuthedUser
+import edu.erittenhouse.gitlabtimetracker.util.gitlabmock.GitlabMock
+import edu.erittenhouse.gitlabtimetracker.util.gitlabmock.ProjectMock
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import tornadofx.Scope
 import tornadofx.find
-import tornadofx.setInScope
 import java.io.File
 
 
@@ -182,10 +183,7 @@ class IssueControllerTest {
             currentUser,
         ),
     )
-    private val scope = Scope().apply {
-        setInScope(GitlabMockAPI(gitlabState), this, GitlabAPI::class)
-        setInScope(StorageConfig(CREDENTIAL_FILE_LOCATION), this)
-    }
+    private val scope = generateTestScope(gitlabState)
     private val controller = find<IssueController>(scope)
     private val credentialController = find<CredentialController>(scope)
 
@@ -218,14 +216,6 @@ class IssueControllerTest {
             // Verify the correct issues are loaded
             assert(controller.issueList.size == 1)
             assert(controller.issueList[0] == Issue.fromGitlabDto(ponderingIssue.issue))
-        }
-    }
-
-    @Test
-    fun `Project select fails when credentials are missing`() {
-        runBlocking {
-            val projectSelectResult = controller.selectProject(Project.fromGitlabDto(neatProjectData))
-            assert(projectSelectResult == ProjectSelectResult.NoCredentials)
         }
     }
 
@@ -323,7 +313,6 @@ class IssueControllerTest {
                 elapsedTime = TimeSpend(10),
             ))
             assert(timeRecordResult == TimeRecordResult.TimeRecorded)
-            // This refers to the reticulate splines issue in the mock
             assert(gitlabState.fetchIssue(neatProjectData.id, reticulateSplinesIssue.issue.idInProject)?.timeSpend?.timeSpent == "2h 13m")
 
             // Test - recording time with no spend
@@ -332,7 +321,6 @@ class IssueControllerTest {
                 elapsedTime = TimeSpend(10),
             ))
             assert(noSpendRecordResult == TimeRecordResult.TimeRecorded)
-            // This refers to the discombobulate issue in the mock
             assert(gitlabState.fetchIssue(neatProjectData.id, discombobulateIssue.issue.idInProject)?.timeSpend?.timeSpent == "10m")
         }
     }

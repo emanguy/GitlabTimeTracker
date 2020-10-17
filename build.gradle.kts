@@ -34,7 +34,6 @@ dependencies {
 
     // Testing dependencies
     testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
-    testImplementation("io.mockk:mockk:1.10.2")
 }
 
 tasks {

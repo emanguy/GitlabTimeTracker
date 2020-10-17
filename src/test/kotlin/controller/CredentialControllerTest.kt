@@ -1,19 +1,16 @@
 package edu.erittenhouse.gitlabtimetracker.controller
 
-import edu.erittenhouse.gitlabtimetracker.gitlab.GitlabAPI
 import edu.erittenhouse.gitlabtimetracker.gitlab.GitlabCredential
 import edu.erittenhouse.gitlabtimetracker.gitlab.dto.GitlabUser
 import edu.erittenhouse.gitlabtimetracker.util.CREDENTIAL_FILE_LOCATION
+import edu.erittenhouse.gitlabtimetracker.util.generateTestScope
 import edu.erittenhouse.gitlabtimetracker.util.gitlabmock.AuthedUser
 import edu.erittenhouse.gitlabtimetracker.util.gitlabmock.GitlabMock
-import edu.erittenhouse.gitlabtimetracker.util.gitlabmock.GitlabMockAPI
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import tornadofx.Scope
 import tornadofx.find
-import tornadofx.setInScope
 import java.io.File
 
 class CredentialControllerTest {
@@ -28,10 +25,7 @@ class CredentialControllerTest {
             apiCredentials = setOf("abc123")
         )
     ))
-    private val scope = Scope().apply {
-        setInScope(GitlabMockAPI(gitlabState), this, GitlabAPI::class)
-        setInScope(StorageConfig(CREDENTIAL_FILE_LOCATION), this)
-    }
+    private val scope = generateTestScope(gitlabState)
     private val controller = find<CredentialController>(scope)
 
     @AfterEach

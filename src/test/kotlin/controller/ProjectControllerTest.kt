@@ -1,22 +1,19 @@
 package edu.erittenhouse.gitlabtimetracker.controller
 
 import edu.erittenhouse.gitlabtimetracker.controller.result.ProjectFetchResult
-import edu.erittenhouse.gitlabtimetracker.gitlab.GitlabAPI
 import edu.erittenhouse.gitlabtimetracker.gitlab.GitlabCredential
 import edu.erittenhouse.gitlabtimetracker.gitlab.dto.GitlabProject
 import edu.erittenhouse.gitlabtimetracker.gitlab.dto.GitlabUser
 import edu.erittenhouse.gitlabtimetracker.util.CREDENTIAL_FILE_LOCATION
+import edu.erittenhouse.gitlabtimetracker.util.generateTestScope
 import edu.erittenhouse.gitlabtimetracker.util.gitlabmock.AuthedUser
 import edu.erittenhouse.gitlabtimetracker.util.gitlabmock.GitlabMock
-import edu.erittenhouse.gitlabtimetracker.util.gitlabmock.GitlabMockAPI
 import edu.erittenhouse.gitlabtimetracker.util.gitlabmock.ProjectMock
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import tornadofx.Scope
 import tornadofx.find
-import tornadofx.setInScope
 import java.io.File
 
 class ProjectControllerTest {
@@ -67,10 +64,7 @@ class ProjectControllerTest {
             authData,
         ),
     )
-    private val mockScope = Scope().apply {
-        setInScope(GitlabMockAPI(gitlabState), this, GitlabAPI::class)
-        setInScope(StorageConfig(CREDENTIAL_FILE_LOCATION), this)
-    }
+    private val mockScope = generateTestScope(gitlabState)
 
     private val credentialController = find<CredentialController>(mockScope)
     private val controller = find<ProjectController>(mockScope)
