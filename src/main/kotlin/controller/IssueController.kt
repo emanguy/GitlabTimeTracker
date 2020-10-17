@@ -23,6 +23,7 @@ import tornadofx.Controller
 import tornadofx.asObservable
 
 class IssueController : Controller() {
+    private val gitlabAPI by inject<GitlabAPI>()
     private val credentialController by inject<CredentialController>()
     private val userController by inject<UserController>()
     private val initialFilterOptions = listOf(MilestoneFilterOption.NoMilestoneOptionSelected, MilestoneFilterOption.HasAssignedMilestone, MilestoneFilterOption.HasNoMilestone)
@@ -35,7 +36,6 @@ class IssueController : Controller() {
 
     private sealed class IssuesAndMilestonesResult {
         object NoCredentials : IssuesAndMilestonesResult()
-        object NoUser : IssuesAndMilestonesResult()
         data class FetchedMilestonesAndIssues(val issues: List<Issue>, val milestones: List<Milestone>) : IssuesAndMilestonesResult()
     }
 
@@ -47,7 +47,6 @@ class IssueController : Controller() {
      */
     suspend fun selectProject(project: Project): ProjectSelectResult {
         val projectIssuesAndMilestones = when (val loadIssMilResult = getIssuesAndMilestonesForProject(project)) {
-            is IssuesAndMilestonesResult.NoUser -> return ProjectSelectResult.NoUser
             is IssuesAndMilestonesResult.NoCredentials -> return ProjectSelectResult.NoCredentials
             is IssuesAndMilestonesResult.FetchedMilestonesAndIssues -> loadIssMilResult
         }
@@ -71,7 +70,6 @@ class IssueController : Controller() {
         val project = selectedProject.get() ?: return IssueRefreshResult.NoProject
         val issuesAndMilestones = when (val issMilFetchResult = getIssuesAndMilestonesForProject(project)) {
             is IssuesAndMilestonesResult.NoCredentials -> return IssueRefreshResult.NoCredentials
-            is IssuesAndMilestonesResult.NoUser -> return IssueRefreshResult.NoUser
             is IssuesAndMilestonesResult.FetchedMilestonesAndIssues -> issMilFetchResult
         }
 
@@ -125,7 +123,7 @@ class IssueController : Controller() {
     suspend fun recordTime(issueWithTime: IssueWithTime): TimeRecordResult {
         if (issueWithTime.elapsedTime.totalMinutes == 0L) return TimeRecordResult.NegligibleTime
         val credentials = credentialController.credentials ?: return TimeRecordResult.NoCredentials
-        val success = GitlabAPI.issue.addTimeSpentToIssue(credentials, issueWithTime.issue.projectID, issueWithTime.issue.idInProject, issueWithTime.elapsedTime.toString())
+        val success = gitlabAPI.issue.addTimeSpentToIssue(credentials, issueWithTime.issue.projectID, issueWithTime.issue.idInProject, issueWithTime.elapsedTime.toString())
 
         return if (success) {
             val updatedIssue = issueWithTime.issue.copy(timeSpent = issueWithTime.issue.timeSpent + issueWithTime.elapsedTime)
@@ -195,13 +193,12 @@ class IssueController : Controller() {
         val credentials = credentialController.credentials ?: return IssuesAndMilestonesResult.NoCredentials
         val currentUser = when(val loadUserResult = userController.getOrLoadCurrentUser()) {
             is UserLoadResult.GotUser -> loadUserResult.user
-            is UserLoadResult.NotFound -> return IssuesAndMilestonesResult.NoUser
             is UserLoadResult.NoCredentials -> return IssuesAndMilestonesResult.NoCredentials
         }
 
         return coroutineScope {
-            val issuesDeferred = async { GitlabAPI.issue.getIssuesForProject(credentials, currentUser.id, project.id) }
-            val milestonesDeferred = async { GitlabAPI.milestone.getMilestonesForProject(credentials, project.id) }
+            val issuesDeferred = async { gitlabAPI.issue.getIssuesForProject(credentials, currentUser.id, project.id) }
+            val milestonesDeferred = async { gitlabAPI.milestone.getMilestonesForProject(credentials, project.id) }
 
             val convertedIssues = issuesDeferred.await().map { Issue.fromGitlabDto(it) }
             val convertedMilestones = milestonesDeferred.await().map { Milestone.fromGitlabDto(it) }.sortedBy { it.endDate }

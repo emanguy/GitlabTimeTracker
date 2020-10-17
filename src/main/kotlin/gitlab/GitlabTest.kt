@@ -9,14 +9,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
-class GitlabTest(private val client: HttpClient) {
+interface IGitlabTest {
     /**
      * Tests that the passed credentials are valid
      *
      * @param credentials The GitLab credentials to test
      * @return True if the credentials are valid
      */
-    suspend fun testCredentials(credentials: GitlabCredential): Boolean = withContext(Dispatchers.Default) {
+    suspend fun testCredentials(credentials: GitlabCredential): Boolean
+}
+
+class GitlabTest(private val client: HttpClient) : IGitlabTest {
+    override suspend fun testCredentials(credentials: GitlabCredential): Boolean = withContext(Dispatchers.Default) {
         val response = withTimeoutOrNull(10_000) {
             catchingErrors {
                 client.get<HttpStatement>(credentials.instancePath("/api/v4/version")) {

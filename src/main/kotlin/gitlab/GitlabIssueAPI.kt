@@ -3,16 +3,14 @@ package edu.erittenhouse.gitlabtimetracker.gitlab
 import edu.erittenhouse.gitlabtimetracker.gitlab.dto.GitlabIssue
 import edu.erittenhouse.gitlabtimetracker.gitlab.error.catchingErrors
 import edu.erittenhouse.gitlabtimetracker.model.filter.MilestoneFilterOption
-import io.ktor.client.HttpClient
-import io.ktor.client.request.get
-import io.ktor.client.request.post
-import io.ktor.client.statement.HttpStatement
-import io.ktor.http.HttpStatusCode
+import io.ktor.client.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class GitlabIssueAPI(private val client: HttpClient) {
-
+interface IGitlabIssueAPI {
     /**
      * Retrieves issues on a project that the user is assigned to and are open.
      *
@@ -26,6 +24,28 @@ class GitlabIssueAPI(private val client: HttpClient) {
         userID: Int,
         projectID: Int,
         milestoneFilter: MilestoneFilterOption = MilestoneFilterOption.NoMilestoneOptionSelected
+    ): List<GitlabIssue>
+
+    /**
+     * Add an amount of time spend to an issue. Format should be that of model.TimeSpend.toString().
+     *
+     * @param credentials Authentication information for the request.
+     * @param projectID The ID of the project where the issue lives
+     * @param issueIDInProject The project-specific ID of the issue to add time to
+     * @param timeSpent The amount of time spent, formatted the way the /spend command in GitLab is
+     *
+     * @return True if the time spent was successfully applied
+     */
+    suspend fun addTimeSpentToIssue(credentials: GitlabCredential, projectID: Int, issueIDInProject: Int, timeSpent: String): Boolean
+}
+
+class GitlabIssueAPI(private val client: HttpClient) : IGitlabIssueAPI {
+
+    override suspend fun getIssuesForProject(
+        credentials: GitlabCredential,
+        userID: Int,
+        projectID: Int,
+        milestoneFilter: MilestoneFilterOption
     ): List<GitlabIssue> = withContext(Dispatchers.Default) {
         return@withContext catchingErrors {
             val issues = mutableListOf<GitlabIssue>()
@@ -62,17 +82,7 @@ class GitlabIssueAPI(private val client: HttpClient) {
         }
     }
 
-    /**
-     * Add an amount of time spend to an issue. Format should be that of model.TimeSpend.toString().
-     *
-     * @param credentials Authentication information for the request.
-     * @param projectID The ID of the project where the issue lives
-     * @param issueIDInProject The project-specific ID of the issue to add time to
-     * @param timeSpent The amount of time spent, formatted the way the /spend command in GitLab is
-     *
-     * @return True if the time spent was successfully applied
-     */
-    suspend fun addTimeSpentToIssue(credentials: GitlabCredential, projectID: Int, issueIDInProject: Int, timeSpent: String): Boolean = withContext(Dispatchers.Default) {
+    override suspend fun addTimeSpentToIssue(credentials: GitlabCredential, projectID: Int, issueIDInProject: Int, timeSpent: String): Boolean = withContext(Dispatchers.Default) {
         val response = catchingErrors {
             client.post<HttpStatement>(credentials.instancePath("/api/v4/projects/$projectID/issues/$issueIDInProject/add_spent_time")) {
                 addGitlabCredentials(credentials)

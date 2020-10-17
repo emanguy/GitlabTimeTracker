@@ -77,8 +77,6 @@ class TimeTrackingView : SuspendingIOSafeView("Gitlab Time Tracker") {
         launch {
             when (userController.loadCurrentUser()) {
                 is UserLoadResult.GotUser -> { /* Good to go! */ }
-                is UserLoadResult.NotFound -> showErrorModal("There was an issue. We couldn't retrieve your user information. " +
-                        "Please restart the app.")
                 is UserLoadResult.NoCredentials -> showErrorModal("Something went wrong. We didn't retrieve the credentials from the login page," +
                         " please notify a developer!")
             }

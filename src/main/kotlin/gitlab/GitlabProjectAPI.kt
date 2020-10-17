@@ -2,19 +2,23 @@ package edu.erittenhouse.gitlabtimetracker.gitlab
 
 import edu.erittenhouse.gitlabtimetracker.gitlab.dto.GitlabProject
 import edu.erittenhouse.gitlabtimetracker.gitlab.error.catchingErrors
-import io.ktor.client.HttpClient
-import io.ktor.client.request.get
+import io.ktor.client.*
+import io.ktor.client.request.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class GitlabProjectAPI(private val client: HttpClient) {
+interface IGitlabProjectAPI {
     /**
      * Retrieves a list of the projects a user is a member of from GitLab.
      *
      * @param credentials The credentials to use to authenticate the request
      * @return The list of Gitlab projects the user is a member of
      */
-    suspend fun listUserMemberProjects(credentials: GitlabCredential): List<GitlabProject> = withContext(Dispatchers.Default) {
+    suspend fun listUserMemberProjects(credentials: GitlabCredential): List<GitlabProject>
+}
+
+class GitlabProjectAPI(private val client: HttpClient) : IGitlabProjectAPI {
+    override suspend fun listUserMemberProjects(credentials: GitlabCredential): List<GitlabProject> = withContext(Dispatchers.Default) {
         return@withContext catchingErrors {
             val allProjects = mutableListOf<GitlabProject>()
             var page = 1
