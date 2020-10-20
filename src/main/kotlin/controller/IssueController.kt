@@ -5,6 +5,7 @@ import edu.erittenhouse.gitlabtimetracker.controller.result.ProjectSelectResult
 import edu.erittenhouse.gitlabtimetracker.controller.result.TimeRecordResult
 import edu.erittenhouse.gitlabtimetracker.controller.result.UserLoadResult
 import edu.erittenhouse.gitlabtimetracker.gitlab.GitlabAPI
+import edu.erittenhouse.gitlabtimetracker.gitlab.error.HttpErrors
 import edu.erittenhouse.gitlabtimetracker.model.Issue
 import edu.erittenhouse.gitlabtimetracker.model.IssueWithTime
 import edu.erittenhouse.gitlabtimetracker.model.Milestone
@@ -123,7 +124,13 @@ class IssueController : Controller() {
     suspend fun recordTime(issueWithTime: IssueWithTime): TimeRecordResult {
         if (issueWithTime.elapsedTime.totalMinutes == 0L) return TimeRecordResult.NegligibleTime
         val credentials = credentialController.credentials ?: return TimeRecordResult.NoCredentials
-        val success = gitlabAPI.issue.addTimeSpentToIssue(credentials, issueWithTime.issue.projectID, issueWithTime.issue.idInProject, issueWithTime.elapsedTime.toString())
+        val success = try {
+            gitlabAPI.issue.addTimeSpentToIssue(credentials, issueWithTime.issue.projectID, issueWithTime.issue.idInProject, issueWithTime.elapsedTime.toString())
+        } catch (e: HttpErrors.ConnectivityError) {
+            println("Failed to connect to gitlab. Detail below.")
+            e.printStackTrace()
+            return TimeRecordResult.TimeFailedToRecord
+        }
 
         return if (success) {
             val updatedIssue = issueWithTime.issue.copy(timeSpent = issueWithTime.issue.timeSpent + issueWithTime.elapsedTime)
