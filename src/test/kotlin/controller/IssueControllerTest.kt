@@ -5,14 +5,12 @@ import edu.erittenhouse.gitlabtimetracker.controller.result.ProjectSelectResult
 import edu.erittenhouse.gitlabtimetracker.controller.result.TimeRecordResult
 import edu.erittenhouse.gitlabtimetracker.gitlab.GitlabCredential
 import edu.erittenhouse.gitlabtimetracker.gitlab.dto.*
+import edu.erittenhouse.gitlabtimetracker.gitlab.error.HttpErrors
 import edu.erittenhouse.gitlabtimetracker.model.*
 import edu.erittenhouse.gitlabtimetracker.model.filter.MilestoneFilterOption
 import edu.erittenhouse.gitlabtimetracker.util.CREDENTIAL_FILE_LOCATION
 import edu.erittenhouse.gitlabtimetracker.util.generateTestScope
-import edu.erittenhouse.gitlabtimetracker.util.gitlabmock.AssignedIssueMock
-import edu.erittenhouse.gitlabtimetracker.util.gitlabmock.AuthedUser
-import edu.erittenhouse.gitlabtimetracker.util.gitlabmock.GitlabMock
-import edu.erittenhouse.gitlabtimetracker.util.gitlabmock.ProjectMock
+import edu.erittenhouse.gitlabtimetracker.util.gitlabmock.*
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -348,6 +346,24 @@ class IssueControllerTest {
                 elapsedTime = TimeSpend(10),
             ))
             assert(issueRecordResult == TimeRecordResult.NoCredentials)
+        }
+    }
+
+    @Test
+    fun `Time recording returns failed result if gitlab connection fails`() {
+        runBlocking {
+            // Configure time recording endpoint to throw a connectivity error
+            gitlabState.triggerHttpErrorOnCall(MethodIdentifier.ADD_TIME_SPENT_TO_ISSUE, HttpErrors.ConnectivityError("Couldn't connect to Gitlab"))
+
+            val credentialLoadResult = credentialController.tryAddCredentials(GitlabCredential("https://fake.gitlab", "jdoe-creds"))
+            assertTrue(credentialLoadResult)
+
+            val timeRecordResult = controller.recordTime(
+                IssueWithTime(
+                issue = Issue.fromGitlabDto(reticulateSplinesIssue.issue),
+                    elapsedTime = TimeSpend(10),
+            ))
+            assert(timeRecordResult == TimeRecordResult.TimeFailedToRecord)
         }
     }
 }

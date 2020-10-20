@@ -11,8 +11,19 @@ import edu.erittenhouse.gitlabtimetracker.model.filter.MilestoneFilterOption
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
+enum class MethodIdentifier {
+    TEST_CREDENTIALS,
+    LIST_USER_MEMBER_PROJECTS,
+    GET_MILESTONES_FOR_PROJECT,
+    GET_ISSUES_FOR_PROJECT,
+    ADD_TIME_SPENT_TO_ISSUE,
+    GET_CURRENT_USER,
+}
+
 class GitlabMock(var projects: List<ProjectMock> = emptyList(), var users: List<AuthedUser> = emptyList()) : IGitlabTest, IGitlabProjectAPI, IGitlabMilestoneAPI, IGitlabIssueAPI, IGitlabUserAPI {
     private val projectListLock = Mutex()
+    private val errorTriggerLock = Mutex()
+    private var httpErrorTriggers: Map<MethodIdentifier, HttpErrors> = emptyMap()
 
     /**
      * Fetches the issue with the given ID within the specified project.
@@ -24,19 +35,36 @@ class GitlabMock(var projects: List<ProjectMock> = emptyList(), var users: List<
             ?.issue
     }
 
+    /**
+     * Configures the given gitlab API method to fail with the given HTTP error
+     */
+    suspend fun triggerHttpErrorOnCall(method: MethodIdentifier, error: HttpErrors) {
+        errorTriggerLock.withLock {
+            val mutableCopy = httpErrorTriggers.toMutableMap()
+            mutableCopy[method] = error
+            httpErrorTriggers = mutableCopy
+        }
+    }
+
     override suspend fun testCredentials(credentials: GitlabCredential): Boolean {
+        throwIfNecessary(MethodIdentifier.TEST_CREDENTIALS)
+
         val localUsersSnapshot = users
         return localUsersSnapshot.any { credentials.personalAccessToken in it.apiCredentials }
     }
 
     override suspend fun listUserMemberProjects(credentials: GitlabCredential): List<GitlabProject> {
         if (!testCredentials(credentials)) throw HttpErrors.InvalidResponseError(401, "Bad credentials")
+        throwIfNecessary(MethodIdentifier.LIST_USER_MEMBER_PROJECTS)
+
         val localProjectsSnapshot = projects
         return localProjectsSnapshot.map { it.projectData }
     }
 
     override suspend fun getMilestonesForProject(credentials: GitlabCredential, projectID: Int): List<GitlabMilestone> {
         if (!testCredentials(credentials)) throw HttpErrors.InvalidResponseError(401, "Bad credentials")
+        throwIfNecessary(MethodIdentifier.GET_MILESTONES_FOR_PROJECT)
+
         val localProjectsSnapshot = projects
         return localProjectsSnapshot.find { it.projectData.id == projectID }?.milestones ?: throw HttpErrors.InvalidResponseError(404, "Not found")
     }
@@ -48,6 +76,8 @@ class GitlabMock(var projects: List<ProjectMock> = emptyList(), var users: List<
         milestoneFilter: MilestoneFilterOption
     ): List<GitlabIssue> {
         if (!testCredentials(credentials)) throw HttpErrors.InvalidResponseError(401, "Bad credentials")
+        throwIfNecessary(MethodIdentifier.GET_ISSUES_FOR_PROJECT)
+
         val localProjectsList = projects
         val projectIssues = localProjectsList.find { it.projectData.id == projectID }?.issues ?: throw HttpErrors.InvalidResponseError(404, "Not found")
         return when (milestoneFilter) {
@@ -66,6 +96,7 @@ class GitlabMock(var projects: List<ProjectMock> = emptyList(), var users: List<
         timeSpent: String,
     ): Boolean {
         if (!testCredentials(credentials)) return false
+        throwIfNecessary(MethodIdentifier.ADD_TIME_SPENT_TO_ISSUE)
 
         projectListLock.withLock {
             val projectIdx = projects.indexOfFirst { it.projectData.id == projectID }
@@ -93,8 +124,14 @@ class GitlabMock(var projects: List<ProjectMock> = emptyList(), var users: List<
 
     override suspend fun getCurrentUser(credentials: GitlabCredential): GitlabUser {
         if (!testCredentials(credentials)) throw HttpErrors.InvalidResponseError(401, "Bad credentials")
+        throwIfNecessary(MethodIdentifier.GET_CURRENT_USER)
 
         return users.find { credentials.personalAccessToken in it.apiCredentials }?.userData ?:
             error("Something's wonky, the credential test passed but we couldn't find the appropriate user.")
+    }
+
+    private fun throwIfNecessary(method: MethodIdentifier) {
+        val fetchedError = httpErrorTriggers[method] ?: return
+        throw fetchedError
     }
 }
