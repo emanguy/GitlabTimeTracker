@@ -25,6 +25,9 @@ First, go to Gitlab. This should work both for the public version of GitLab and 
 
 You can build and run the app off your local machine using the included `gradlew` script for your machine. **Java 1.8 JDK is required.**
 
+*Note that if you want to use slack functionality during local development you'll need to define the slack client secret
+in the file `src/main/resources/slackClientSecret.txt`.*
+
 To run:
 
     ./gradlew run
