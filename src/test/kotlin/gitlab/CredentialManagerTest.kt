@@ -1,6 +1,8 @@
 package edu.erittenhouse.gitlabtimetracker.gitlab
 
 import edu.erittenhouse.gitlabtimetracker.gitlab.error.CredentialIOError
+import edu.erittenhouse.gitlabtimetracker.io.CredentialManager
+import edu.erittenhouse.gitlabtimetracker.model.GitlabCredential
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*

@@ -2,6 +2,8 @@ package edu.erittenhouse.gitlabtimetracker.gitlab
 
 import edu.erittenhouse.gitlabtimetracker.gitlab.dto.GitlabIssue
 import edu.erittenhouse.gitlabtimetracker.gitlab.error.catchingErrors
+import edu.erittenhouse.gitlabtimetracker.model.GitlabCredential
+import edu.erittenhouse.gitlabtimetracker.model.addGitlabCredentials
 import edu.erittenhouse.gitlabtimetracker.model.filter.MilestoneFilterOption
 import io.ktor.client.*
 import io.ktor.client.request.*

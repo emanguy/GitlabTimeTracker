@@ -1,6 +1,7 @@
-package edu.erittenhouse.gitlabtimetracker.gitlab
+package edu.erittenhouse.gitlabtimetracker.io
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import edu.erittenhouse.gitlabtimetracker.model.GitlabCredential
 import edu.erittenhouse.gitlabtimetracker.gitlab.error.CredentialIOError
 import edu.erittenhouse.gitlabtimetracker.util.JsonMapper
 import kotlinx.coroutines.Dispatchers

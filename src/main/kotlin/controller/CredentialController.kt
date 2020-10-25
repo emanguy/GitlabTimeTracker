@@ -1,8 +1,8 @@
 package edu.erittenhouse.gitlabtimetracker.controller
 
-import edu.erittenhouse.gitlabtimetracker.gitlab.CredentialManager
+import edu.erittenhouse.gitlabtimetracker.io.CredentialManager
 import edu.erittenhouse.gitlabtimetracker.gitlab.GitlabAPI
-import edu.erittenhouse.gitlabtimetracker.gitlab.GitlabCredential
+import edu.erittenhouse.gitlabtimetracker.model.GitlabCredential
 import tornadofx.Controller
 
 class CredentialController : Controller() {

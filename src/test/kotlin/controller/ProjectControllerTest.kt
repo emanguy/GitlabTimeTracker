@@ -1,7 +1,7 @@
 package edu.erittenhouse.gitlabtimetracker.controller
 
 import edu.erittenhouse.gitlabtimetracker.controller.result.ProjectFetchResult
-import edu.erittenhouse.gitlabtimetracker.gitlab.GitlabCredential
+import edu.erittenhouse.gitlabtimetracker.model.GitlabCredential
 import edu.erittenhouse.gitlabtimetracker.gitlab.dto.GitlabProject
 import edu.erittenhouse.gitlabtimetracker.gitlab.dto.GitlabUser
 import edu.erittenhouse.gitlabtimetracker.util.CREDENTIAL_FILE_LOCATION

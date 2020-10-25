@@ -3,7 +3,7 @@ package edu.erittenhouse.gitlabtimetracker.controller
 import edu.erittenhouse.gitlabtimetracker.controller.result.IssueRefreshResult
 import edu.erittenhouse.gitlabtimetracker.controller.result.ProjectSelectResult
 import edu.erittenhouse.gitlabtimetracker.controller.result.TimeRecordResult
-import edu.erittenhouse.gitlabtimetracker.gitlab.GitlabCredential
+import edu.erittenhouse.gitlabtimetracker.model.GitlabCredential
 import edu.erittenhouse.gitlabtimetracker.gitlab.dto.*
 import edu.erittenhouse.gitlabtimetracker.gitlab.error.HttpErrors
 import edu.erittenhouse.gitlabtimetracker.model.*

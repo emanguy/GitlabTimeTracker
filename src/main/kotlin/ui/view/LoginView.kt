@@ -1,7 +1,7 @@
 package edu.erittenhouse.gitlabtimetracker.ui.view
 
 import edu.erittenhouse.gitlabtimetracker.controller.CredentialController
-import edu.erittenhouse.gitlabtimetracker.gitlab.GitlabCredential
+import edu.erittenhouse.gitlabtimetracker.model.GitlabCredential
 import edu.erittenhouse.gitlabtimetracker.gitlab.error.CredentialIOError
 import edu.erittenhouse.gitlabtimetracker.gitlab.error.HttpErrors
 import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles

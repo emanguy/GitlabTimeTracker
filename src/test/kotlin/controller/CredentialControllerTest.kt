@@ -1,6 +1,6 @@
 package edu.erittenhouse.gitlabtimetracker.controller
 
-import edu.erittenhouse.gitlabtimetracker.gitlab.GitlabCredential
+import edu.erittenhouse.gitlabtimetracker.model.GitlabCredential
 import edu.erittenhouse.gitlabtimetracker.gitlab.dto.GitlabUser
 import edu.erittenhouse.gitlabtimetracker.util.CREDENTIAL_FILE_LOCATION
 import edu.erittenhouse.gitlabtimetracker.util.generateTestScope

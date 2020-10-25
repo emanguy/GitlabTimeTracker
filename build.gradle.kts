@@ -9,6 +9,7 @@ version = "1.2.0"
 
 repositories {
     mavenCentral()
+    jcenter()
 }
 
 application {
@@ -19,6 +20,7 @@ dependencies {
     val coroutinesVersion = "1.3.9"
     val jacksonVersion = "2.10.0"
     val ktorVersion = "1.4.1"
+    val slackAPIversion = "1.2.1"
 
     // Application dependencies
     implementation("no.tornado:tornadofx:1.7.20")
@@ -30,7 +32,13 @@ dependencies {
     implementation("io.ktor:ktor-client-apache:$ktorVersion")
     implementation("io.ktor:ktor-client-json:$ktorVersion")
     implementation("io.ktor:ktor-client-jackson:$ktorVersion")
+    implementation("io.ktor:ktor-server-netty:$ktorVersion")
+    implementation("io.ktor:ktor-auth:$ktorVersion")
+    implementation("io.ktor:ktor-html-builder:$ktorVersion")
     implementation("joda-time:joda-time:2.10.5")
+    implementation("com.slack.api:slack-api-client:$slackAPIversion")
+    implementation("com.slack.api:slack-api-model-kotlin-extension:$slackAPIversion")
+    implementation("com.slack.api:slack-api-client-kotlin-extension:$slackAPIversion")
 
     // Testing dependencies
     testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
