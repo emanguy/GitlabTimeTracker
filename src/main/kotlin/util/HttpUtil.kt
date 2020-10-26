@@ -1,11 +1,10 @@
 package edu.erittenhouse.gitlabtimetracker.util
 
 import com.fasterxml.jackson.databind.DeserializationFeature
-import edu.erittenhouse.gitlabtimetracker.gitlab.error.HttpErrors
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.apache.Apache
-import io.ktor.client.features.json.JacksonSerializer
-import io.ktor.client.features.json.JsonFeature
+import edu.erittenhouse.gitlabtimetracker.io.error.HttpErrors
+import io.ktor.client.*
+import io.ktor.client.engine.apache.*
+import io.ktor.client.features.json.*
 
 val httpClient = HttpClient(Apache) {
     install(JsonFeature) {

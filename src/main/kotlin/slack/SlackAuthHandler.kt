@@ -1,6 +1,7 @@
 package edu.erittenhouse.gitlabtimetracker.slack
 
 import com.slack.api.Slack
+import com.slack.api.methods.SlackApiException
 import edu.erittenhouse.gitlabtimetracker.model.SlackCredential
 import edu.erittenhouse.gitlabtimetracker.slack.result.LoginResult
 import edu.erittenhouse.gitlabtimetracker.slack.result.ServerInitResult
@@ -12,12 +13,14 @@ import io.ktor.routing.*
 import io.ktor.server.cio.*
 import io.ktor.server.engine.*
 import io.ktor.util.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.html.*
 import java.awt.Desktop
 import java.net.URI
@@ -50,9 +53,9 @@ class SlackAuthHandler : ISlackAuthHandler {
     private val authServerLock = Mutex()
 
 
-    override suspend fun authenticateSlack(): LoginResult {
+    override suspend fun authenticateSlack(): LoginResult = withContext(Dispatchers.Default) {
         when (startAuthServer()) {
-            is ServerInitResult.ServerAlreadyRunning -> return LoginResult.AuthAlreadyInProgress
+            is ServerInitResult.ServerAlreadyRunning -> return@withContext LoginResult.AuthAlreadyInProgress
             is ServerInitResult.ServerStarted -> { /* Good to go */ }
         }
 
@@ -70,7 +73,7 @@ class SlackAuthHandler : ISlackAuthHandler {
             terminateAuthServer()
         }
 
-        return if (loginToken == null) {
+        return@withContext if (loginToken == null) {
             LoginResult.LoginFailure
         } else {
             LoginResult.SuccessfulLogin(loginToken)
@@ -130,10 +133,15 @@ class SlackAuthHandler : ISlackAuthHandler {
             } catch (e: Exception) {
                 println("Encountered exception during auth - ${e.message}")
                 e.printStackTrace()
+                val errorMessage = if (e is SlackApiException) e.message else null
 
-                call.sendAuthFailPage()
+                call.sendAuthFailPage(errorMessage)
                 authChannel.send(null)
                 return@get
+            }
+
+            if (!tokenResponse.isOk) {
+                call.sendAuthFailPage(tokenResponse.error)
             }
 
             val accessToken = tokenResponse.authedUser?.accessToken ?: run {
@@ -160,7 +168,7 @@ class SlackAuthHandler : ISlackAuthHandler {
         }
     }
 
-    private suspend fun ApplicationCall.sendAuthFailPage() {
+    private suspend fun ApplicationCall.sendAuthFailPage(errorMessage: String? = null) {
         respondHtml {
             head {
                 title("Authentication failed.")
@@ -176,6 +184,11 @@ class SlackAuthHandler : ISlackAuthHandler {
                     }
                     p {
                         +"Slack login didn't work :( Go back to the app and try again."
+                    }
+                    if (!errorMessage.isNullOrBlank()) {
+                        p {
+                            +"Slack error code: $errorMessage"
+                        }
                     }
                 }
             }

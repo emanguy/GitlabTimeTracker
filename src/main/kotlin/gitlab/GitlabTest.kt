@@ -1,6 +1,6 @@
 package edu.erittenhouse.gitlabtimetracker.gitlab
 
-import edu.erittenhouse.gitlabtimetracker.gitlab.error.catchingErrors
+import edu.erittenhouse.gitlabtimetracker.io.error.catchingErrors
 import edu.erittenhouse.gitlabtimetracker.model.GitlabCredential
 import edu.erittenhouse.gitlabtimetracker.model.addGitlabCredentials
 import io.ktor.client.*
