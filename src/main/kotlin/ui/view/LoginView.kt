@@ -1,8 +1,8 @@
 package edu.erittenhouse.gitlabtimetracker.ui.view
 
 import edu.erittenhouse.gitlabtimetracker.controller.CredentialController
-import edu.erittenhouse.gitlabtimetracker.io.error.CredentialIOError
 import edu.erittenhouse.gitlabtimetracker.io.error.HttpErrors
+import edu.erittenhouse.gitlabtimetracker.io.error.SettingsIOError
 import edu.erittenhouse.gitlabtimetracker.model.GitlabCredential
 import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles
 import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
@@ -73,7 +73,7 @@ class LoginView : SuspendingView("Gitlab Time Tracker - Login") {
     override fun onUncaughtCoroutineException(context: CoroutineContext, exception: Throwable) {
         super.onUncaughtCoroutineException(context, exception)
         when (exception) {
-            is CredentialIOError -> credentialIssueText.set("${exception.message} If your ${exception.problemFilepath} file still exists, please delete it.")
+            is SettingsIOError -> credentialIssueText.set("${exception.message} If your ${exception.problemFilepath} file still exists, please delete it.")
             is HttpErrors -> showErrorModal(generateMessageForIOExceptions(exception))
             else -> showErrorModal("We had an issue: ${exception.message}")
         }

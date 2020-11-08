@@ -1,7 +1,6 @@
-package edu.erittenhouse.gitlabtimetracker.gitlab
+package edu.erittenhouse.gitlabtimetracker.io
 
-import edu.erittenhouse.gitlabtimetracker.gitlab.error.CredentialIOError
-import edu.erittenhouse.gitlabtimetracker.io.CredentialManager
+import edu.erittenhouse.gitlabtimetracker.io.error.SettingsIOError
 import edu.erittenhouse.gitlabtimetracker.model.GitlabCredential
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
@@ -9,9 +8,9 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.io.File
 
-class CredentialManagerTest {
+class SettingsManagerTest {
     private val fileLocation = "./credentials"
-    private val manager = CredentialManager(fileLocation)
+    private val manager = SettingsManager(fileLocation)
 
     @AfterEach
     fun `Remove stored data`() {
@@ -49,7 +48,7 @@ class CredentialManagerTest {
             try {
                 manager.getCredential()
                 fail<Unit>("Should have thrown exception")
-            } catch (e: CredentialIOError) {
+            } catch (e: SettingsIOError) {
                 println("Exception thrown.")
             } catch (e: Exception) {
                 fail<Unit>("Threw wrong exception")
