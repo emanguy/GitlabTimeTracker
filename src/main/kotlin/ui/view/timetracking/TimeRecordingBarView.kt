@@ -6,19 +6,23 @@ import edu.erittenhouse.gitlabtimetracker.controller.result.RecordingStopResult
 import edu.erittenhouse.gitlabtimetracker.controller.result.TimeRecordResult
 import edu.erittenhouse.gitlabtimetracker.model.Issue
 import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles
-import edu.erittenhouse.gitlabtimetracker.ui.util.SuspendingIOSafeView
+import edu.erittenhouse.gitlabtimetracker.ui.util.Debouncer
+import edu.erittenhouse.gitlabtimetracker.ui.util.SuspendingView
 import edu.erittenhouse.gitlabtimetracker.ui.util.showErrorModal
+import edu.erittenhouse.gitlabtimetracker.ui.util.showErrorModalForIOErrors
 import javafx.beans.property.SimpleStringProperty
 import javafx.geometry.Pos
 import javafx.scene.control.Button
 import tornadofx.*
+import kotlin.coroutines.CoroutineContext
 
-class TimeRecordingBarView : SuspendingIOSafeView() {
+class TimeRecordingBarView : SuspendingView() {
     private var stopButton by singleAssign<Button>()
     private val issueNameProperty = SimpleStringProperty("No issue being tracked")
 
     private val timeRecordingController by inject<TimeRecordingController>()
     private val issueController by inject<IssueController>()
+    private val ioErrorDebouncer = Debouncer()
 
     override val root = hbox {
             addClass(LayoutStyles.typicalPaddingAndSpacing)
@@ -57,6 +61,11 @@ class TimeRecordingBarView : SuspendingIOSafeView() {
         timeRecordingController.recordingIssueProperty.onChange {
             handleRecordingIssueUpdate(it)
         }
+    }
+
+    override fun onUncaughtCoroutineException(context: CoroutineContext, exception: Throwable) {
+        super.onUncaughtCoroutineException(context, exception)
+        ioErrorDebouncer.runDebounced { showErrorModalForIOErrors(exception) }
     }
 
     private fun handleRecordingIssueUpdate(issue: Issue?) {

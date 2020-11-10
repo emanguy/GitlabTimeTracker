@@ -8,13 +8,18 @@ import edu.erittenhouse.gitlabtimetracker.model.Issue
 import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles
 import edu.erittenhouse.gitlabtimetracker.ui.style.ProgressStyles
 import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
-import edu.erittenhouse.gitlabtimetracker.ui.util.SuspendingIOSafeListCellFragment
+import edu.erittenhouse.gitlabtimetracker.ui.util.Debouncer
+import edu.erittenhouse.gitlabtimetracker.ui.util.SuspendingListCellFragment
 import edu.erittenhouse.gitlabtimetracker.ui.util.showErrorModal
+import edu.erittenhouse.gitlabtimetracker.ui.util.showErrorModalForIOErrors
 import javafx.scene.control.ProgressBar
 import javafx.scene.layout.Priority
 import tornadofx.*
+import kotlin.coroutines.CoroutineContext
 
-class IssueListCellFragment : SuspendingIOSafeListCellFragment<Issue>() {
+class IssueListCellFragment : SuspendingListCellFragment<Issue>() {
+    private val ioErrorDebouncer = Debouncer()
+
     private val idProperty = stringBinding(itemProperty) { "#${value?.idInProject}"}
     private val issueTitleProperty = stringBinding(itemProperty) { value?.title ?: "" }
     private val createTimeProperty = stringBinding(itemProperty) {
@@ -146,6 +151,11 @@ class IssueListCellFragment : SuspendingIOSafeListCellFragment<Issue>() {
             root.isVisible = it != null
             updateProgress(it)
         }
+    }
+
+    override fun onUncaughtCoroutineException(context: CoroutineContext, exception: Throwable) {
+        super.onUncaughtCoroutineException(context, exception)
+        ioErrorDebouncer.runDebounced { showErrorModalForIOErrors(exception) }
     }
 
     private fun updateProgress(updatedIssue: Issue?) {

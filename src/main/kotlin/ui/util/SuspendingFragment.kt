@@ -6,19 +6,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.javafx.JavaFx
-import tornadofx.View
+import tornadofx.Fragment
 
-abstract class SuspendingView(title: String? = null, icon: Node? = null) : View(title, icon), UIScope {
-    private val ceh = CoroutineExceptionHandler { context, exception ->
-        this.onUncaughtCoroutineException(context, exception)
+abstract class SuspendingFragment(title: String? = null, icon: Node? = null) : Fragment(title, icon), UIScope {
+    private val ceh = CoroutineExceptionHandler { coroutineContext, throwable ->
+        onUncaughtCoroutineException(coroutineContext, throwable)
     }
     override val coroutineContext = Dispatchers.JavaFx + SupervisorJob() + ceh
 
     override fun onUndock() {
         super.onUndock()
 
-        // Cancel running coroutines, but not the job on the SuspendingView
-        // That way this scope's job is still valid, so if the view is reattached we can still run new coroutines
+        // Don't allow async processes to continue running after the fragment is undocked
         this.coroutineContext.cancelChildren()
     }
 }

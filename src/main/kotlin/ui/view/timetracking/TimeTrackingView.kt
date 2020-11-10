@@ -7,14 +7,17 @@ import edu.erittenhouse.gitlabtimetracker.controller.result.ProjectFetchResult
 import edu.erittenhouse.gitlabtimetracker.controller.result.UserLoadResult
 import edu.erittenhouse.gitlabtimetracker.ui.fragment.UserDisplayFragment
 import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
-import edu.erittenhouse.gitlabtimetracker.ui.util.SuspendingIOSafeView
+import edu.erittenhouse.gitlabtimetracker.ui.util.Debouncer
+import edu.erittenhouse.gitlabtimetracker.ui.util.SuspendingView
 import edu.erittenhouse.gitlabtimetracker.ui.util.showErrorModal
+import edu.erittenhouse.gitlabtimetracker.ui.util.showErrorModalForIOErrors
 import javafx.geometry.Orientation
 import javafx.scene.layout.Pane
 import kotlinx.coroutines.launch
 import tornadofx.*
+import kotlin.coroutines.CoroutineContext
 
-class TimeTrackingView : SuspendingIOSafeView("Gitlab Time Tracker") {
+class TimeTrackingView : SuspendingView("Gitlab Time Tracker") {
     private var swappedChildren = false
     private var issueListPane by singleAssign<Pane>()
     private var userDisplay by singleAssign<UserDisplayFragment>()
@@ -22,6 +25,7 @@ class TimeTrackingView : SuspendingIOSafeView("Gitlab Time Tracker") {
     private val issueController by inject<IssueController>()
     private val userController by inject<UserController>()
     private val projectController by inject<ProjectController>()
+    private val ioErrorDebouncer = Debouncer()
 
     init {
         issueController.selectedProject.onChange {
@@ -64,6 +68,11 @@ class TimeTrackingView : SuspendingIOSafeView("Gitlab Time Tracker") {
         }
 
         bottom(TimeRecordingBarView::class)
+    }
+
+    override fun onUncaughtCoroutineException(context: CoroutineContext, exception: Throwable) {
+        super.onUncaughtCoroutineException(context, exception)
+        ioErrorDebouncer.runDebounced { showErrorModalForIOErrors(exception) }
     }
 
     override fun onDock() {

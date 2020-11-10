@@ -4,8 +4,10 @@ import edu.erittenhouse.gitlabtimetracker.controller.IssueController
 import edu.erittenhouse.gitlabtimetracker.controller.result.IssueRefreshResult
 import edu.erittenhouse.gitlabtimetracker.model.filter.MilestoneFilterOption
 import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles
-import edu.erittenhouse.gitlabtimetracker.ui.util.SuspendingIOSafeView
+import edu.erittenhouse.gitlabtimetracker.ui.util.Debouncer
+import edu.erittenhouse.gitlabtimetracker.ui.util.SuspendingView
 import edu.erittenhouse.gitlabtimetracker.ui.util.showErrorModal
+import edu.erittenhouse.gitlabtimetracker.ui.util.showErrorModalForIOErrors
 import javafx.scene.layout.Priority
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -16,12 +18,14 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.javafx.asFlow
 import kotlinx.coroutines.launch
 import tornadofx.*
+import kotlin.coroutines.CoroutineContext
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-class FilterBarView : SuspendingIOSafeView() {
+class FilterBarView : SuspendingView() {
     private val issueController by inject<IssueController>()
     private var filterFieldFlow by singleAssign<Flow<String>>()
     private var milestoneFilterFlow by singleAssign<Flow<MilestoneFilterOption>>()
+    private val ioErrorDebouncer = Debouncer()
 
     override val root = hbox {
         addClass(LayoutStyles.typicalPaddingAndSpacing, LayoutStyles.centerAlignLeft)
@@ -78,6 +82,11 @@ class FilterBarView : SuspendingIOSafeView() {
                 }
             }
         }
+    }
+
+    override fun onUncaughtCoroutineException(context: CoroutineContext, exception: Throwable) {
+        super.onUncaughtCoroutineException(context, exception)
+        ioErrorDebouncer.runDebounced { showErrorModalForIOErrors(exception) }
     }
 
     override fun onDock() {

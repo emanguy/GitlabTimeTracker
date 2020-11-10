@@ -1,8 +1,7 @@
 package edu.erittenhouse.gitlabtimetracker.io
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import edu.erittenhouse.gitlabtimetracker.io.error.SettingsIOError
-import edu.erittenhouse.gitlabtimetracker.io.error.SettingsMissingError
+import edu.erittenhouse.gitlabtimetracker.io.error.SettingsErrors
 import edu.erittenhouse.gitlabtimetracker.model.GitlabCredential
 import edu.erittenhouse.gitlabtimetracker.model.SlackCredential
 import edu.erittenhouse.gitlabtimetracker.model.settings.defaultSettings
@@ -32,7 +31,7 @@ class SettingsManager(private val fileLocation: String = System.getProperty("use
          * Fetches the cached settings from memory, falling back on and caching the value from
          * disk if not in memory, finally returning null if the settings cannot be retrieved
          *
-         * @throws SettingsIOError if the data exists on disk but couldn't be read
+         * @throws SettingsErrors.DiskIOError if the data exists on disk but couldn't be read
          */
         suspend fun fetchSettings(fileName: String): Settings? {
             return lockingSettingsForFile(fileName) {
@@ -45,7 +44,7 @@ class SettingsManager(private val fileLocation: String = System.getProperty("use
                     val settings = try {
                         JsonMapper.readValue<Settings>(settingsFile)
                     } catch (e: Exception) {
-                        throw SettingsIOError(fileName, "Failed to retrieve saved settings.", e)
+                        throw SettingsErrors.DiskIOError(fileName, "Failed to retrieve saved settings.", e)
                     }
 
                     statesByFile[fileName] = settings
@@ -57,7 +56,7 @@ class SettingsManager(private val fileLocation: String = System.getProperty("use
         /**
          * Saves new settings to disk and updates the settings in memory.
          *
-         * @throws SettingsIOError if persisting the settings to disk fails
+         * @throws SettingsErrors.DiskIOError if persisting the settings to disk fails
          */
         suspend fun saveSettings(fileName: String, settings: Settings): Unit = withContext(Dispatchers.IO) {
             lockingSettingsForFile(fileName) {
@@ -69,7 +68,7 @@ class SettingsManager(private val fileLocation: String = System.getProperty("use
 
                     JsonMapper.writeValue(settingsFile, settings)
                 } catch (e: Exception) {
-                    throw SettingsIOError(fileName, "Failed to save settings to disk.")
+                    throw SettingsErrors.DiskIOError(fileName, "Failed to save settings to disk.")
                 }
             }
         }
@@ -78,7 +77,7 @@ class SettingsManager(private val fileLocation: String = System.getProperty("use
     /**
      * Saves gitlab credentials to disk.
      *
-     * @throws SettingsIOError if the disk operation fails
+     * @throws SettingsErrors.DiskIOError if the disk operation fails
      */
     suspend fun setCredential(credential: GitlabCredential) {
         val currentSettings = fetchSettings(fileLocation)
@@ -89,11 +88,11 @@ class SettingsManager(private val fileLocation: String = System.getProperty("use
     /**
      * Saves slack credentials to disk.
      *
-     * @throws SettingsIOError if the disk operation fails
-     * @throws SettingsMissingError if required settings have not yet been set, such as gitlab credentials
+     * @throws SettingsErrors.DiskIOError if the disk operation fails
+     * @throws SettingsErrors.RequiredMissingError if required settings have not yet been set, such as gitlab credentials
      */
     suspend fun setSlackCredentials(credential: SlackCredential?) {
-        val currentSettings = fetchSettings(fileLocation) ?: throw SettingsMissingError()
+        val currentSettings = fetchSettings(fileLocation) ?: throw SettingsErrors.RequiredMissingError()
         val newSettings = currentSettings.copy(slackCredentials = credential)
         saveSettings(fileLocation, newSettings)
     }
@@ -102,7 +101,7 @@ class SettingsManager(private val fileLocation: String = System.getProperty("use
      * Tries to retrieve gitlab credentials from disk, or in-memory cache if applicable
      *
      * @return Gitlab credentials from disk or null if they were never saved
-     * @throws SettingsIOError if the data exists on disk but couldn't be read
+     * @throws SettingsErrors.DiskIOError if the data exists on disk but couldn't be read
      */
     suspend fun getCredential(): GitlabCredential? = fetchSettings(fileLocation)?.gitlabCredentials
 
@@ -110,7 +109,7 @@ class SettingsManager(private val fileLocation: String = System.getProperty("use
      * Tries to retrieve slack credentials from disk, or in-memory cache if applicable
      *
      * @return Slack credentials from disk or null if user did not sign in with slack
-     * @throws SettingsIOError if data exists on disk but couldn't be read
+     * @throws SettingsErrors.DiskIOError if data exists on disk but couldn't be read
      */
     suspend fun getSlackCredentials(): SlackCredential? = fetchSettings(fileLocation)?.slackCredentials
 }

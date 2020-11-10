@@ -1,6 +1,6 @@
 package edu.erittenhouse.gitlabtimetracker.io
 
-import edu.erittenhouse.gitlabtimetracker.io.error.SettingsIOError
+import edu.erittenhouse.gitlabtimetracker.io.error.SettingsErrors
 import edu.erittenhouse.gitlabtimetracker.model.GitlabCredential
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
@@ -48,7 +48,7 @@ class SettingsManagerTest {
             try {
                 manager.getCredential()
                 fail<Unit>("Should have thrown exception")
-            } catch (e: SettingsIOError) {
+            } catch (e: SettingsErrors.DiskIOError) {
                 println("Exception thrown.")
             } catch (e: Exception) {
                 fail<Unit>("Threw wrong exception")
