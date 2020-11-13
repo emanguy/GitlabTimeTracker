@@ -1,13 +1,17 @@
 package edu.erittenhouse.gitlabtimetracker.ui.view
 
 import edu.erittenhouse.gitlabtimetracker.controller.CredentialController
+import edu.erittenhouse.gitlabtimetracker.controller.StorageConfig
 import edu.erittenhouse.gitlabtimetracker.io.error.HttpErrors
 import edu.erittenhouse.gitlabtimetracker.io.error.SettingsErrors
+import edu.erittenhouse.gitlabtimetracker.io.migrateSettingsFile
+import edu.erittenhouse.gitlabtimetracker.io.result.FileMigrationResult
 import edu.erittenhouse.gitlabtimetracker.model.GitlabCredential
 import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles
 import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
 import edu.erittenhouse.gitlabtimetracker.ui.util.SuspendingView
 import edu.erittenhouse.gitlabtimetracker.ui.util.showErrorModal
+import edu.erittenhouse.gitlabtimetracker.ui.util.showOKModal
 import edu.erittenhouse.gitlabtimetracker.ui.view.timetracking.TimeTrackingView
 import edu.erittenhouse.gitlabtimetracker.util.generateMessageForIOExceptions
 import javafx.beans.property.SimpleBooleanProperty
@@ -15,6 +19,7 @@ import javafx.beans.property.SimpleStringProperty
 import kotlinx.coroutines.launch
 import tornadofx.*
 import kotlin.coroutines.CoroutineContext
+import kotlin.system.exitProcess
 
 class LoginView : SuspendingView("Gitlab Time Tracker - Login") {
     private val credentialController: CredentialController by inject()
@@ -54,8 +59,10 @@ class LoginView : SuspendingView("Gitlab Time Tracker - Login") {
     override fun onDock() {
         super.onDock()
 
-        if (!credentialController.hasCredentials) {
-            launch {
+        launch {
+            val migrationSuccess = performSettingsMigration()
+
+            if (migrationSuccess && !credentialController.hasCredentials) {
                 credentialController.loadCredentials()
                 usePreviousCredentialsVisible.set(credentialController.hasCredentials)
             }
@@ -88,6 +95,34 @@ class LoginView : SuspendingView("Gitlab Time Tracker - Login") {
             this.replaceWith<TimeTrackingView>()
         } else {
             credentialIssueText.set("Hmm. Looks like those credentials didn't work.")
+        }
+    }
+
+    private suspend fun performSettingsMigration(): Boolean {
+        val storageConfig = find<StorageConfig>()
+        val migrationMessage = when (val migrationResult = migrateSettingsFile(storageConfig.fileLocation)) {
+            is FileMigrationResult.MigrationSucceeded -> null
+            is FileMigrationResult.AlreadyOnLatestVersion -> null
+            is FileMigrationResult.FileDoesNotExist -> null
+            is FileMigrationResult.VersionTooNew -> "Sorry, we couldn't retrieve your settings. It looks like the settings file on disk is from a newer version of Gitlab Time Tracker." +
+                    " We recommend you delete the ${storageConfig.fileLocation} file from your hard drive and restart the application. Click OK to quit the application."
+            is FileMigrationResult.BadVersion -> "Sorry, we couldn't retrieve your settings. We don't recognize the settings file version. We recommend you delete the ${storageConfig.fileLocation}" +
+                    " file from your hard drive. Click OK to quit the application."
+            is FileMigrationResult.MigrationProducedUnexpectedModel -> "Sorry, we couldn't retrieve your settings. A developer did something dumb and we couldn't migrate your " +
+                    "settings file to the latest format. Tell a developer a migration for version ${migrationResult.modelVersion} failed, then delete your ${storageConfig.fileLocation} file " +
+                    "from your hard drive and click OK to quit the application."
+            is FileMigrationResult.MigrationMissing -> "Sorry, we couldn't retrieve your settings. A developer did something dumb and we couldn't migrate your settings file to the " +
+                    "latest format. Tell a developer the migration from version ${migrationResult.fromVersion} failed, then delete your ${storageConfig.fileLocation} file " +
+                    "from your hard drive and click OK to quit the application."
+        }
+
+        return if (migrationMessage != null) {
+            showOKModal("Settings Migration Failure", migrationMessage) {
+                exitProcess(0)
+            }
+            false
+        } else {
+            true
         }
     }
 }

@@ -18,6 +18,7 @@ const val newestMigrationVersion = 1
 /**
  * Converts a settings version to the actual class for that version
  */
+@Suppress("RemoveExplicitTypeArguments")
 val versionToSettings = mapOf<Int, KClass<out VersionedSettings>>(
     0 to V0Settings::class,
     1 to V1Settings::class,
@@ -42,6 +43,6 @@ fun `v0 to v1`(previousVersion: VersionedSettings): V1Settings? {
             gitlabBaseURL = convertedSettings.gitlabBaseURL,
             personalAccessToken = convertedSettings.personalAccessToken,
         ),
-        slackCredentials = null,
+        slackConfig = null,
     )
 }

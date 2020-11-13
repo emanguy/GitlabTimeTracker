@@ -10,12 +10,14 @@ import edu.erittenhouse.gitlabtimetracker.model.settings.settingsMigrations
 import edu.erittenhouse.gitlabtimetracker.model.settings.v1.Settings
 import edu.erittenhouse.gitlabtimetracker.model.settings.versionToSettings
 import edu.erittenhouse.gitlabtimetracker.util.JsonMapper
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 
-fun migrateSettingsFile(fileLocation: String): FileMigrationResult {
+suspend fun migrateSettingsFile(fileLocation: String): FileMigrationResult = withContext(Dispatchers.IO) {
     // Set up the file and verify it exists
     val file = File(fileLocation)
-    if (!file.exists()) return FileMigrationResult.FileDoesNotExist
+    if (!file.exists()) return@withContext FileMigrationResult.FileDoesNotExist
 
     // Read the contents of the file
     val fileContent = try {
@@ -26,11 +28,11 @@ fun migrateSettingsFile(fileLocation: String): FileMigrationResult {
 
     // Perform migration
     val migratedSettings = when (val result = migrateSettings(fileContent)) {
-        is MigrationResult.AlreadyOnLatestVersion -> return FileMigrationResult.AlreadyOnLatestVersion
-        is MigrationResult.BadVersion -> return FileMigrationResult.BadVersion
-        is MigrationResult.VersionTooNew -> return FileMigrationResult.VersionTooNew
-        is MigrationResult.MigrationMissing -> return FileMigrationResult.MigrationMissing(result.fromVersion)
-        is MigrationResult.MigrationProducedUnexpectedModel -> return FileMigrationResult.MigrationProducedUnexpectedModel(result.modelVersion)
+        is MigrationResult.AlreadyOnLatestVersion -> return@withContext FileMigrationResult.AlreadyOnLatestVersion
+        is MigrationResult.BadVersion -> return@withContext FileMigrationResult.BadVersion
+        is MigrationResult.VersionTooNew -> return@withContext FileMigrationResult.VersionTooNew
+        is MigrationResult.MigrationMissing -> return@withContext FileMigrationResult.MigrationMissing(result.fromVersion)
+        is MigrationResult.MigrationProducedUnexpectedModel -> return@withContext FileMigrationResult.MigrationProducedUnexpectedModel(result.modelVersion)
         is MigrationResult.MigrationSucceeded -> result.migratedSettings
     }
 
@@ -40,7 +42,7 @@ fun migrateSettingsFile(fileLocation: String): FileMigrationResult {
     } catch (e: Exception) {
         throw SettingsErrors.DiskIOError(fileLocation, "Failed to write migrated settings to file", e)
     }
-    return FileMigrationResult.MigrationSucceeded
+    return@withContext FileMigrationResult.MigrationSucceeded
 }
 
 /**

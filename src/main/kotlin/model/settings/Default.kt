@@ -8,5 +8,5 @@ import edu.erittenhouse.gitlabtimetracker.model.settings.v1.Settings
  */
 fun defaultSettings(gitlabCredentials: GitlabCredential): Settings = Settings(
     gitlabCredentials = gitlabCredentials,
-    slackCredentials = null,
+    slackConfig = null,
 )
