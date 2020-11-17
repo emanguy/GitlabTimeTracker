@@ -3,7 +3,7 @@ package edu.erittenhouse.gitlabtimetracker.ui.fragment
 import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles
 import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
 import edu.erittenhouse.gitlabtimetracker.ui.util.PopupCallback
-import edu.erittenhouse.gitlabtimetracker.ui.util.SuspendingFragment
+import edu.erittenhouse.gitlabtimetracker.ui.util.suspension.SuspendingFragment
 import tornadofx.addClass
 import tornadofx.button
 import tornadofx.text

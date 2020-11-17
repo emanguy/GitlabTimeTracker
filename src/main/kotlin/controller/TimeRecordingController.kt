@@ -4,7 +4,7 @@ import edu.erittenhouse.gitlabtimetracker.controller.result.RecordingStopResult
 import edu.erittenhouse.gitlabtimetracker.model.Issue
 import edu.erittenhouse.gitlabtimetracker.model.IssueWithTime
 import edu.erittenhouse.gitlabtimetracker.model.TimeSpend
-import edu.erittenhouse.gitlabtimetracker.ui.util.SuspendingController
+import edu.erittenhouse.gitlabtimetracker.ui.util.suspension.SuspendingController
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
 import kotlinx.coroutines.*

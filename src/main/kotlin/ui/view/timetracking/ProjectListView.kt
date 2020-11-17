@@ -5,9 +5,9 @@ import edu.erittenhouse.gitlabtimetracker.controller.ProjectController
 import edu.erittenhouse.gitlabtimetracker.controller.result.ProjectSelectResult
 import edu.erittenhouse.gitlabtimetracker.ui.fragment.ProjectListCellFragment
 import edu.erittenhouse.gitlabtimetracker.ui.util.Debouncer
-import edu.erittenhouse.gitlabtimetracker.ui.util.SuspendingView
-import edu.erittenhouse.gitlabtimetracker.ui.util.showErrorModal
-import edu.erittenhouse.gitlabtimetracker.ui.util.showErrorModalForIOErrors
+import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.showErrorModal
+import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.showErrorModalForIOErrors
+import edu.erittenhouse.gitlabtimetracker.ui.util.suspension.SuspendingView
 import javafx.scene.layout.Priority
 import tornadofx.listview
 import tornadofx.vgrow

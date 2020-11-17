@@ -9,9 +9,9 @@ import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles
 import edu.erittenhouse.gitlabtimetracker.ui.style.ProgressStyles
 import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
 import edu.erittenhouse.gitlabtimetracker.ui.util.Debouncer
-import edu.erittenhouse.gitlabtimetracker.ui.util.SuspendingListCellFragment
-import edu.erittenhouse.gitlabtimetracker.ui.util.showErrorModal
-import edu.erittenhouse.gitlabtimetracker.ui.util.showErrorModalForIOErrors
+import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.showErrorModal
+import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.showErrorModalForIOErrors
+import edu.erittenhouse.gitlabtimetracker.ui.util.suspension.SuspendingListCellFragment
 import javafx.scene.control.ProgressBar
 import javafx.scene.layout.Priority
 import tornadofx.*
@@ -129,13 +129,13 @@ class IssueListCellFragment : SuspendingListCellFragment<Issue>() {
                 addClass(LayoutStyles.typicalSpacing)
 
                 text(createTimeProperty) {
-                    addClass(TypographyStyles.subtitle)
+                    addClass(TypographyStyles.metadata)
                 }
                 text("|") {
-                    addClass(TypographyStyles.subtitle)
+                    addClass(TypographyStyles.metadata)
                 }
                 text(timeSummaryProperty) {
-                    addClass(TypographyStyles.subtitle)
+                    addClass(TypographyStyles.metadata)
                 }
             }
         }

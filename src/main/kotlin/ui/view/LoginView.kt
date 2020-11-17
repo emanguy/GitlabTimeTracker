@@ -9,9 +9,9 @@ import edu.erittenhouse.gitlabtimetracker.io.result.FileMigrationResult
 import edu.erittenhouse.gitlabtimetracker.model.GitlabCredential
 import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles
 import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
-import edu.erittenhouse.gitlabtimetracker.ui.util.SuspendingView
-import edu.erittenhouse.gitlabtimetracker.ui.util.showErrorModal
-import edu.erittenhouse.gitlabtimetracker.ui.util.showOKModal
+import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.showErrorModal
+import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.showOKModal
+import edu.erittenhouse.gitlabtimetracker.ui.util.suspension.SuspendingView
 import edu.erittenhouse.gitlabtimetracker.ui.view.timetracking.TimeTrackingView
 import edu.erittenhouse.gitlabtimetracker.util.generateMessageForIOExceptions
 import javafx.beans.property.SimpleBooleanProperty

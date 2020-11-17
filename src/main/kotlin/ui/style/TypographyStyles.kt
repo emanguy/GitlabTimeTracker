@@ -6,6 +6,7 @@ class TypographyStyles : Stylesheet() {
     companion object {
         val title by cssclass()
         val subtitle by cssclass()
+        val metadata by cssclass()
     }
 
     init {
@@ -16,6 +17,9 @@ class TypographyStyles : Stylesheet() {
             fontSize = 20.px
         }
         subtitle {
+            fontSize = 15.px
+        }
+        metadata {
             fill = c("#717171")
         }
     }

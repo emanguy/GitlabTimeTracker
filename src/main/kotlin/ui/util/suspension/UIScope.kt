@@ -1,4 +1,4 @@
-package edu.erittenhouse.gitlabtimetracker.ui.util
+package edu.erittenhouse.gitlabtimetracker.ui.util.suspension
 
 import javafx.scene.control.*
 import kotlinx.coroutines.CoroutineScope

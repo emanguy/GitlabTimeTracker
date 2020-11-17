@@ -8,19 +8,26 @@ import edu.erittenhouse.gitlabtimetracker.controller.result.UserLoadResult
 import edu.erittenhouse.gitlabtimetracker.ui.fragment.UserDisplayFragment
 import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
 import edu.erittenhouse.gitlabtimetracker.ui.util.Debouncer
-import edu.erittenhouse.gitlabtimetracker.ui.util.SuspendingView
-import edu.erittenhouse.gitlabtimetracker.ui.util.showErrorModal
-import edu.erittenhouse.gitlabtimetracker.ui.util.showErrorModalForIOErrors
+import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.showErrorModal
+import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.showErrorModalForIOErrors
+import edu.erittenhouse.gitlabtimetracker.ui.util.suspension.SuspendingView
+import edu.erittenhouse.gitlabtimetracker.ui.view.settings.SettingsView
 import javafx.geometry.Orientation
 import javafx.scene.layout.Pane
+import javafx.stage.Stage
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import tornadofx.*
 import kotlin.coroutines.CoroutineContext
 
+@OptIn(FlowPreview::class)
 class TimeTrackingView : SuspendingView("Gitlab Time Tracker") {
     private var swappedChildren = false
     private var issueListPane by singleAssign<Pane>()
     private var userDisplay by singleAssign<UserDisplayFragment>()
+    private var settingsStage: Stage? = null
 
     private val issueController by inject<IssueController>()
     private val userController by inject<UserController>()
@@ -100,6 +107,11 @@ class TimeTrackingView : SuspendingView("Gitlab Time Tracker") {
             }
         }
 
+        // Listen for user clicking the settings button, show dialog
+        launch {
+            listenForSettingsTrigger()
+        }
+
         // Whenever we enter the view, make sure we show the unselected state
         this.swappedChildren = false
         this.issueListPane.replaceChildren {
@@ -107,5 +119,23 @@ class TimeTrackingView : SuspendingView("Gitlab Time Tracker") {
                 addClass(TypographyStyles.title)
             }
         }
+    }
+
+    private suspend fun listenForSettingsTrigger() {
+        userDisplay.settingsTriggerFlow
+            .catch { e -> onUncaughtCoroutineException(coroutineContext, e) }
+            .collect {
+                val settingsStageCopy = settingsStage
+                if (settingsStageCopy == null) {
+                    val newSettingsStage = find<SettingsView>().openWindow()?.apply {
+                        setOnCloseRequest {
+                            settingsStage = null
+                        }
+                    }
+                    settingsStage = newSettingsStage
+                } else {
+                    settingsStageCopy.requestFocus()
+                }
+            }
     }
 }

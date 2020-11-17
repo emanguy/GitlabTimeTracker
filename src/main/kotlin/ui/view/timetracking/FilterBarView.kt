@@ -5,9 +5,9 @@ import edu.erittenhouse.gitlabtimetracker.controller.result.IssueRefreshResult
 import edu.erittenhouse.gitlabtimetracker.model.filter.MilestoneFilterOption
 import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles
 import edu.erittenhouse.gitlabtimetracker.ui.util.Debouncer
-import edu.erittenhouse.gitlabtimetracker.ui.util.SuspendingView
-import edu.erittenhouse.gitlabtimetracker.ui.util.showErrorModal
-import edu.erittenhouse.gitlabtimetracker.ui.util.showErrorModalForIOErrors
+import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.showErrorModal
+import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.showErrorModalForIOErrors
+import edu.erittenhouse.gitlabtimetracker.ui.util.suspension.SuspendingView
 import javafx.scene.layout.Priority
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview

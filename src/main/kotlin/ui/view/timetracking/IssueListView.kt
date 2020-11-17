@@ -3,8 +3,8 @@ package edu.erittenhouse.gitlabtimetracker.ui.view.timetracking
 import edu.erittenhouse.gitlabtimetracker.controller.IssueController
 import edu.erittenhouse.gitlabtimetracker.ui.fragment.IssueListCellFragment
 import edu.erittenhouse.gitlabtimetracker.ui.util.Debouncer
-import edu.erittenhouse.gitlabtimetracker.ui.util.SuspendingView
-import edu.erittenhouse.gitlabtimetracker.ui.util.showErrorModalForIOErrors
+import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.showErrorModalForIOErrors
+import edu.erittenhouse.gitlabtimetracker.ui.util.suspension.SuspendingView
 import javafx.scene.layout.Priority
 import tornadofx.*
 import kotlin.coroutines.CoroutineContext
