@@ -56,7 +56,7 @@ class UserDisplayFragment : SuspendingItemFragment<User>() {
 
         button("Settings") {
             action {
-                println(_settingsTriggerFlow.tryEmit(Unit))
+                _settingsTriggerFlow.tryEmit(Unit)
             }
         }
     }

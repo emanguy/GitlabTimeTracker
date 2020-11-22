@@ -8,7 +8,7 @@ sealed class ServerInitResult {
 }
 
 sealed class LoginResult {
-    data class SuccessfulLogin(val token: SlackCredential) : LoginResult()
+    data class SuccessfulLogin(val slackCredential: SlackCredential) : LoginResult()
     object LoginFailure : LoginResult()
     object AuthAlreadyInProgress : LoginResult()
 }

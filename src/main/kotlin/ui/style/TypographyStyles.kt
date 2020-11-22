@@ -1,5 +1,6 @@
 package edu.erittenhouse.gitlabtimetracker.ui.style
 
+import javafx.scene.paint.Color
 import tornadofx.*
 
 class TypographyStyles : Stylesheet() {
@@ -7,6 +8,7 @@ class TypographyStyles : Stylesheet() {
         val title by cssclass()
         val subtitle by cssclass()
         val metadata by cssclass()
+        val errorText by cssclass()
     }
 
     init {
@@ -21,6 +23,9 @@ class TypographyStyles : Stylesheet() {
         }
         metadata {
             fill = c("#717171")
+        }
+        errorText {
+            fill = Color.ORANGERED
         }
     }
 }

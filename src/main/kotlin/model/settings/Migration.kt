@@ -44,5 +44,6 @@ fun `v0 to v1`(previousVersion: VersionedSettings): V1Settings? {
             personalAccessToken = convertedSettings.personalAccessToken,
         ),
         slackConfig = null,
+        slackEnabled = false,
     )
 }

@@ -91,9 +91,9 @@ class SettingsManager(private val fileLocation: String = System.getProperty("use
      * @throws SettingsErrors.DiskIOError if the disk operation fails
      * @throws SettingsErrors.RequiredMissingError if required settings have not yet been set, such as gitlab credentials
      */
-    suspend fun setSlackConfig(credential: SlackConfig?) {
+    suspend fun setSlackConfig(credential: SlackConfig, slackEnabled: Boolean) {
         val currentSettings = fetchSettings(fileLocation) ?: throw SettingsErrors.RequiredMissingError()
-        val newSettings = currentSettings.copy(slackConfig = credential)
+        val newSettings = currentSettings.copy(slackConfig = credential, slackEnabled = slackEnabled)
         saveSettings(fileLocation, newSettings)
     }
 
@@ -112,4 +112,11 @@ class SettingsManager(private val fileLocation: String = System.getProperty("use
      * @throws SettingsErrors.DiskIOError if data exists on disk but couldn't be read
      */
     suspend fun getSlackConfig(): SlackConfig? = fetchSettings(fileLocation)?.slackConfig
+
+    /**
+     * Tries to retrieve whether or not slack integration is enabled.
+     * @return True if slack integration is enabled
+     * @throws SettingsErrors.DiskIOError if data exists on disk but couldn't be read
+     */
+    suspend fun getSlackEnabled(): Boolean = fetchSettings(fileLocation)?.slackEnabled ?: false
 }

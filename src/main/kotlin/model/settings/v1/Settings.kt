@@ -5,5 +5,6 @@ import edu.erittenhouse.gitlabtimetracker.model.settings.VersionedSettings
 
 data class Settings(
     val gitlabCredentials: GitlabCredential,
-    val slackConfig: SlackConfig?
+    val slackConfig: SlackConfig?,
+    val slackEnabled: Boolean
 ) : VersionedSettings(1)

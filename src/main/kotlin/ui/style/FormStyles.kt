@@ -7,11 +7,11 @@ import tornadofx.cssclass
 
 class FormStyles : Stylesheet() {
     companion object {
-        val fieldInvalid by cssclass()
+        val fieldInvalidBorder by cssclass()
     }
 
     init {
-        fieldInvalid {
+        fieldInvalidBorder {
             borderColor += box(Color.ORANGERED)
         }
     }
