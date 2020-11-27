@@ -30,6 +30,7 @@ class SlackSettingsSubview : SuspendingView() {
     private object ErrorTextBindings {
         val slackButtonText = SimpleStringProperty("")
         val emojiCodeText = SimpleStringProperty("")
+        val statusMessageText = SimpleStringProperty("")
     }
     private object FormControls {
         var statusEmojiInput by singleAssign<TextField>()
@@ -104,8 +105,14 @@ class SlackSettingsSubview : SuspendingView() {
 
                         suspendingOnMouseClick {
                             if (this@toggleswitch.isSelected) {
+                                val slackCredentialCopy = FormValues.slackCredential
+                                if (slackCredentialCopy == null) {
+                                    updateValidationState()
+                                    return@suspendingOnMouseClick
+                                }
+
                                 slackController.enableSlackIntegration(
-                                    FormValues.slackCredential!!,
+                                    slackCredentialCopy,
                                     FormValues.slackEmoji,
                                     FormValues.slackStatusText
                                 )
@@ -115,6 +122,10 @@ class SlackSettingsSubview : SuspendingView() {
                         }
                     }
                 }
+                text(ErrorTextBindings.statusMessageText) {
+                    addClass(TypographyStyles.errorText)
+                    visibleWhen(ErrorTextBindings.statusMessageText.booleanBinding { !it.isNullOrEmpty() })
+                }
             }
         }
     }
@@ -122,9 +133,8 @@ class SlackSettingsSubview : SuspendingView() {
     private suspend fun doSlackLogin() {
         ErrorTextBindings.slackButtonText.set("")
         slackLoginText.set("Connecting to slack...")
-        val loginResult = slackController.slackLogin()
 
-        when (loginResult) {
+        when (val loginResult = slackController.slackLogin()) {
             is SlackLoginResult.AlreadyLoggingIn -> { /* Do nothing */ }
             is SlackLoginResult.InvalidCredentials -> {
                 ErrorTextBindings.slackButtonText.set("Login failed. Please try again.")
@@ -173,7 +183,38 @@ class SlackSettingsSubview : SuspendingView() {
         errorMessageDebouncer.runDebounced { showErrorModalForIOErrors(exception) }
     }
 
-    private fun updateValidationState() {
+    private suspend fun updateValidationState() {
+        // Reset error text
+        ErrorTextBindings.emojiCodeText.set("")
+        ErrorTextBindings.statusMessageText.set("")
 
+        suspend fun disableSlackAndDisableSwitch() {
+            toggleSwitchEnable.set(false)
+            slackController.disableSlackIntegration()
+        }
+
+        // Can't enable if we don't have slack credentials
+        if (FormValues.slackCredential == null) {
+            disableSlackAndDisableSwitch()
+            return
+        }
+
+        // Can't enable if the emoji the user wants isn't surrounded with colons
+        with (FormValues.slackEmoji) {
+            if (!startsWith(":") || !endsWith(":")) {
+                ErrorTextBindings.emojiCodeText.set("The emoji you provide must start and end with colons (:), like in slack.")
+                disableSlackAndDisableSwitch()
+                return
+            }
+        }
+
+        // Can't enable if the status field is empty
+        if (FormValues.slackStatusText.isEmpty()) {
+            ErrorTextBindings.statusMessageText.set("You must provide a status message to enable slack integration.")
+            disableSlackAndDisableSwitch()
+            return
+        }
+
+        toggleSwitchEnable.set(true)
     }
 }
