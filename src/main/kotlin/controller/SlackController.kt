@@ -19,7 +19,6 @@ class SlackController : Controller() {
         private set
     val enabledState = mutableEnabledState.asStateFlow()
 
-
     /**
      * Loads slack credentials from disk into the controller.
      */
@@ -43,11 +42,13 @@ class SlackController : Controller() {
 
     suspend fun enableSlackIntegration(slackCredential: SlackCredential, emoji: String, messageFormat: String) {
         val newConfig = SlackConfig(slackCredential, emoji, messageFormat)
-        settingsManager.setSlackConfig(newConfig, true)
+        settingsManager.setSlackConfig(true, newConfig)
         slackConfig = newConfig
         mutableEnabledState.value = true
     }
 
     suspend fun disableSlackIntegration() {
+        settingsManager.setSlackConfig(slackEnabled = false)
+        mutableEnabledState.value = false
     }
 }

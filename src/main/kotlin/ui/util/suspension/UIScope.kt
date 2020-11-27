@@ -1,6 +1,8 @@
 package edu.erittenhouse.gitlabtimetracker.ui.util.suspension
 
+import javafx.scene.Node
 import javafx.scene.control.*
+import javafx.scene.input.MouseEvent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import tornadofx.action
@@ -26,6 +28,13 @@ interface UIScope : CoroutineScope {
     fun MenuItem.suspendingAction(action: suspend CoroutineScope.() -> Unit) {
         action {
             this@UIScope.launch(block = action)
+        }
+    }
+    fun Node.suspendingOnMouseClick(action: suspend CoroutineScope.(MouseEvent) -> Unit) {
+        setOnMouseClicked { evt ->
+            this@UIScope.launch {
+                action(evt)
+            }
         }
     }
     fun <T> ListView<T>.suspendingOnUserSelect(clickCount: Int = 2, action: suspend CoroutineScope.(T) -> Unit) {

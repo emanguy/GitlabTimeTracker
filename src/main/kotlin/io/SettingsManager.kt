@@ -91,9 +91,9 @@ class SettingsManager(private val fileLocation: String = System.getProperty("use
      * @throws SettingsErrors.DiskIOError if the disk operation fails
      * @throws SettingsErrors.RequiredMissingError if required settings have not yet been set, such as gitlab credentials
      */
-    suspend fun setSlackConfig(credential: SlackConfig, slackEnabled: Boolean) {
+    suspend fun setSlackConfig(slackEnabled: Boolean, credential: SlackConfig? = null) {
         val currentSettings = fetchSettings(fileLocation) ?: throw SettingsErrors.RequiredMissingError()
-        val newSettings = currentSettings.copy(slackConfig = credential, slackEnabled = slackEnabled)
+        val newSettings = currentSettings.copy(slackConfig = credential ?: currentSettings.slackConfig, slackEnabled = slackEnabled)
         saveSettings(fileLocation, newSettings)
     }
 
