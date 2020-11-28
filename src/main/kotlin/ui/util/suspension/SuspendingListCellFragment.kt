@@ -8,16 +8,19 @@ import kotlinx.coroutines.javafx.JavaFx
 import tornadofx.ListCellFragment
 
 abstract class SuspendingListCellFragment<T> : ListCellFragment<T>(), UIScope {
+    override var backgroundTasksStarted = false
     private val ceh = CoroutineExceptionHandler { context, exception ->
         this.onUncaughtCoroutineException(context, exception)
     }
     override val coroutineContext = Dispatchers.JavaFx + SupervisorJob() + ceh
 
+    override fun getChildUiScopes(): List<UIScope> = deepGetChildUIScopes(root)
+    override fun onDock() {
+        super.onDock()
+        startBackgroundTasks()
+    }
     override fun onUndock() {
         super.onUndock()
-
-        // Cancel running coroutines, but not the job on the SuspendingView
-        // That way this scope's job is still valid, so if the view is reattached we can still run new coroutines
-        this.coroutineContext.cancelChildren()
+        viewClosing()
     }
 }

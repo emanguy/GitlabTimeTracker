@@ -12,9 +12,11 @@ import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.showErrorModal
 import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.showErrorModalForIOErrors
 import edu.erittenhouse.gitlabtimetracker.ui.util.suspension.SuspendingView
 import edu.erittenhouse.gitlabtimetracker.ui.view.settings.SettingsView
+import javafx.event.EventHandler
 import javafx.geometry.Orientation
 import javafx.scene.layout.Pane
 import javafx.stage.Stage
+import javafx.stage.WindowEvent
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
@@ -128,7 +130,7 @@ class TimeTrackingView : SuspendingView("Gitlab Time Tracker") {
                 val settingsStageCopy = settingsStage
                 if (settingsStageCopy == null) {
                     val newSettingsStage = find<SettingsView>().openWindow()?.apply {
-                        setOnCloseRequest {
+                        addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST) {
                             settingsStage = null
                         }
                     }
