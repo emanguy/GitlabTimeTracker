@@ -1,17 +1,16 @@
 package edu.erittenhouse.gitlabtimetracker.ui.util.suspension
 
+import javafx.event.EventTarget
 import javafx.scene.Node
-import javafx.scene.Parent
 import javafx.scene.control.*
 import javafx.scene.input.MouseEvent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.cancelChildren
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlinx.coroutines.javafx.JavaFx
 import tornadofx.*
 import kotlin.coroutines.CoroutineContext
+import kotlin.reflect.KClass
 
 interface UIScope : CoroutineScope {
-    var backgroundTasksStarted: Boolean
     fun ButtonBase.suspendingAction(action: suspend CoroutineScope.() -> Unit) {
         action {
             this@UIScope.launch(block = action)
@@ -47,19 +46,12 @@ interface UIScope : CoroutineScope {
         }
     }
     fun <T> ListView<T>.suspendingOnUserSelectOnce(action: suspend CoroutineScope.(T) -> Unit) = suspendingOnUserSelect(1, action)
+    fun <T> EventTarget.scopeAdd(type: KClass<T>, params: Map<*, Any?>? = null, op: T.() -> Unit = {})
+        where T: UIComponent,
+              T: UIScope
 
-    fun getChildUiScopes(): List<UIScope>
-
-    fun startBackgroundTasks() {
-        if (backgroundTasksStarted) return
-        backgroundTasksStarted = true
-        getChildUiScopes().forEach { it.startBackgroundTasks() }
-    }
-    fun viewClosing() {
-        coroutineContext.cancelChildren()
-        backgroundTasksStarted = false
-        getChildUiScopes().forEach { it.viewClosing() }
-    }
+    fun startBackgroundTasks()
+    fun viewClosing()
 
     fun onUncaughtCoroutineException(context: CoroutineContext, exception: Throwable) {
         println("Uncaught coroutine exception.")
@@ -67,9 +59,36 @@ interface UIScope : CoroutineScope {
     }
 }
 
-fun deepGetChildUIScopes(nextComponent: Parent): List<UIScope> {
-    if (nextComponent is UIScope) return listOf(nextComponent)
-    return nextComponent.getChildList()?.flatMap {
-        if (it is Parent) deepGetChildUIScopes(it) else emptyList()
-    } ?: emptyList()
+class UIScopeImpl : UIScope {
+    private val ceh = CoroutineExceptionHandler(::onUncaughtCoroutineException)
+    override val coroutineContext = SupervisorJob() + Dispatchers.JavaFx + ceh
+
+    private lateinit var component: UIComponent
+    private var backgroundTasksStarted = false
+    private var childScopes = emptyList<UIScope>()
+
+    fun registerComponent(component: UIComponent) {
+        this.component = component
+    }
+
+    override fun startBackgroundTasks() {
+        if (backgroundTasksStarted) return
+        backgroundTasksStarted = true
+        childScopes.forEach { it.startBackgroundTasks() }
+    }
+
+    override fun viewClosing() {
+        coroutineContext.cancelChildren()
+        backgroundTasksStarted = false
+        childScopes.forEach { it.viewClosing() }
+    }
+
+    override fun <T> EventTarget.scopeAdd(type: KClass<T>, params: Map<*, Any?>?, op: T.() -> Unit)
+        where T : UIComponent,
+              T : UIScope {
+        val view = find(type, component.scope, params)
+        plusAssign(view.root)
+        childScopes = childScopes + view
+        op(view)
+    }
 }
