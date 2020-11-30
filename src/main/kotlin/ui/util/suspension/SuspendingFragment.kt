@@ -1,27 +1,29 @@
 package edu.erittenhouse.gitlabtimetracker.ui.util.suspension
 
 import javafx.scene.Node
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancelChildren
-import kotlinx.coroutines.javafx.JavaFx
 import tornadofx.Fragment
 
-abstract class SuspendingFragment(title: String? = null, icon: Node? = null) : Fragment(title, icon), UIScope {
-    override var backgroundTasksStarted = false
-    private val ceh = CoroutineExceptionHandler { coroutineContext, throwable ->
-        onUncaughtCoroutineException(coroutineContext, throwable)
-    }
-    override val coroutineContext = Dispatchers.JavaFx + SupervisorJob() + ceh
+abstract class SuspendingFragment private constructor(
+    title: String?,
+    icon: Node?,
+    private val scopeImpl: UIScopeImpl
+) : Fragment(title, icon), UIScope by scopeImpl {
+    private var backgroundTasksStarted = false
 
-    override fun getChildUiScopes(): List<UIScope> = deepGetChildUIScopes(root)
+    constructor(title: String? = null, icon: Node? = null) : this(title, icon, UIScopeImpl()) {
+        scopeImpl.registerComponent(this)
+    }
+
     override fun onDock() {
         super.onDock()
+        if (backgroundTasksStarted) return
+        backgroundTasksStarted = true
         startBackgroundTasks()
     }
     override fun onUndock() {
         super.onUndock()
+        if (!backgroundTasksStarted) return
+        backgroundTasksStarted = false
         viewClosing()
     }
 }

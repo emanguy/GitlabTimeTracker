@@ -8,13 +8,11 @@ import edu.erittenhouse.gitlabtimetracker.ui.util.Debouncer
 import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.flexSpacer
 import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.showErrorModalForIOErrors
 import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.toggleswitch
-import edu.erittenhouse.gitlabtimetracker.ui.util.suspension.SuspendingFragment
 import edu.erittenhouse.gitlabtimetracker.ui.util.suspension.SuspendingView
 import io.ktor.html.*
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.scene.control.TextField
-import javafx.stage.WindowEvent
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collect
@@ -134,18 +132,21 @@ class SlackSettingsSubview : SuspendingView() {
 
     override fun startBackgroundTasks() {
         super.startBackgroundTasks()
-        println("Slack - background tasks started")
+        println("Subview - starting background tasks")
 
         launch {
             slackController.loadCredentials()
-            slackController.slackConfig?.let { config ->
-                slackLoginText.set("Slack Authenticated: ${config.credentialAndTeam.teamName}")
-                FormControls.statusEmojiInput.text = config.statusEmoji
-                FormControls.slackStatusFormatInput.text = config.slackStatusFormat
+            val controllerConfig = slackController.slackConfig
+            if (controllerConfig != null) {
+                slackLoginText.set("Slack Authenticated: ${controllerConfig.credentialAndTeam.teamName}")
+                FormControls.statusEmojiInput.text = controllerConfig.statusEmoji
+                FormControls.slackStatusFormatInput.text = controllerConfig.slackStatusFormat
 
-                FormValues.slackCredential = config.credentialAndTeam
-                FormValues.slackEmoji = config.statusEmoji
-                FormValues.slackStatusText = config.slackStatusFormat
+                FormValues.slackCredential = controllerConfig.credentialAndTeam
+                FormValues.slackEmoji = controllerConfig.statusEmoji
+                FormValues.slackStatusText = controllerConfig.slackStatusFormat
+            } else {
+                slackLoginText.set("Connect to slack")
             }
             FormControls.integrationEnableToggle.isSelected = slackController.enabledState.value
 
@@ -157,14 +158,14 @@ class SlackSettingsSubview : SuspendingView() {
         }
     }
 
+    override fun viewClosing() {
+        super.viewClosing()
+        println("Subview - closing")
+    }
+
     override fun onUncaughtCoroutineException(context: CoroutineContext, exception: Throwable) {
         super.onUncaughtCoroutineException(context, exception)
         errorMessageDebouncer.runDebounced { showErrorModalForIOErrors(exception) }
-    }
-
-    override fun viewClosing() {
-        super.viewClosing()
-        println("Subview undocked")
     }
 
     private suspend fun doSlackLogin() {

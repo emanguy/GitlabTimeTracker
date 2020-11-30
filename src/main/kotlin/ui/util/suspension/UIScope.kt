@@ -64,7 +64,6 @@ class UIScopeImpl : UIScope {
     override val coroutineContext = SupervisorJob() + Dispatchers.JavaFx + ceh
 
     private lateinit var component: UIComponent
-    private var backgroundTasksStarted = false
     private var childScopes = emptyList<UIScope>()
 
     fun registerComponent(component: UIComponent) {
@@ -72,14 +71,11 @@ class UIScopeImpl : UIScope {
     }
 
     override fun startBackgroundTasks() {
-        if (backgroundTasksStarted) return
-        backgroundTasksStarted = true
         childScopes.forEach { it.startBackgroundTasks() }
     }
 
     override fun viewClosing() {
         coroutineContext.cancelChildren()
-        backgroundTasksStarted = false
         childScopes.forEach { it.viewClosing() }
     }
 
