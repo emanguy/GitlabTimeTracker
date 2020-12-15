@@ -2,9 +2,9 @@ package edu.erittenhouse.gitlabtimetracker.ui.view.timetracking
 
 import edu.erittenhouse.gitlabtimetracker.controller.IssueController
 import edu.erittenhouse.gitlabtimetracker.controller.TimeRecordingController
+import edu.erittenhouse.gitlabtimetracker.controller.event.TimeRecordingState
 import edu.erittenhouse.gitlabtimetracker.controller.result.RecordingStopResult
 import edu.erittenhouse.gitlabtimetracker.controller.result.TimeRecordResult
-import edu.erittenhouse.gitlabtimetracker.model.Issue
 import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles
 import edu.erittenhouse.gitlabtimetracker.ui.util.Debouncer
 import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.showErrorModal
@@ -13,6 +13,8 @@ import edu.erittenhouse.gitlabtimetracker.ui.util.suspension.SuspendingView
 import javafx.beans.property.SimpleStringProperty
 import javafx.geometry.Pos
 import javafx.scene.control.Button
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import tornadofx.*
 import kotlin.coroutines.CoroutineContext
 
@@ -58,8 +60,12 @@ class TimeRecordingBarView : SuspendingView() {
     }
 
     init {
-        timeRecordingController.recordingIssueProperty.onChange {
-            handleRecordingIssueUpdate(it)
+        registerBackgroundTaskInit {
+            launch {
+                timeRecordingController.recordingIssueState.collect {
+                    handleRecordingIssueUpdate(it)
+                }
+            }
         }
     }
 
@@ -68,15 +74,18 @@ class TimeRecordingBarView : SuspendingView() {
         ioErrorDebouncer.runDebounced { showErrorModalForIOErrors(exception) }
     }
 
-    private fun handleRecordingIssueUpdate(issue: Issue?) {
-        if (issue == null) {
-            stopButton.text = "Select issue"
-            stopButton.isDisable = true
-            issueNameProperty.set("No issue being tracked")
-        } else {
-            stopButton.text = "Stop and submit"
-            stopButton.isDisable = false
-            issueNameProperty.set("Tracking: ${issue.title}")
+    private fun handleRecordingIssueUpdate(recordingState: TimeRecordingState) {
+        when (recordingState) {
+            is TimeRecordingState.IssueRecording -> {
+                stopButton.text = "Stop and submit"
+                stopButton.isDisable = false
+                issueNameProperty.set("Tracking: ${recordingState.issue.title}")
+            }
+            is TimeRecordingState.NoIssueRecording -> {
+                stopButton.text = "Select issue"
+                stopButton.isDisable = true
+                issueNameProperty.set("No issue being tracked")
+            }
         }
     }
 }

@@ -2,6 +2,7 @@ package edu.erittenhouse.gitlabtimetracker.ui.view.timetracking
 
 import edu.erittenhouse.gitlabtimetracker.controller.IssueController
 import edu.erittenhouse.gitlabtimetracker.controller.ProjectController
+import edu.erittenhouse.gitlabtimetracker.controller.SlackController
 import edu.erittenhouse.gitlabtimetracker.controller.UserController
 import edu.erittenhouse.gitlabtimetracker.controller.result.ProjectFetchResult
 import edu.erittenhouse.gitlabtimetracker.controller.result.UserLoadResult
@@ -36,6 +37,13 @@ class TimeTrackingView : SuspendingView("Gitlab Time Tracker") {
     private val ioErrorDebouncer = Debouncer()
 
     init {
+        // Need to do this once to construct the slack controller
+        registerBackgroundTaskInit {
+            launch {
+                find<SlackController>().loadCredentials()
+            }
+        }
+
         issueController.selectedProject.onChange {
             if (!swappedChildren) {
                 swappedChildren = true

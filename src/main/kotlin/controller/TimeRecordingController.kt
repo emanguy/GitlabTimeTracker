@@ -1,5 +1,6 @@
 package edu.erittenhouse.gitlabtimetracker.controller
 
+import edu.erittenhouse.gitlabtimetracker.controller.event.TimeRecordingState
 import edu.erittenhouse.gitlabtimetracker.controller.result.RecordingStopResult
 import edu.erittenhouse.gitlabtimetracker.model.Issue
 import edu.erittenhouse.gitlabtimetracker.model.IssueWithTime
@@ -9,6 +10,9 @@ import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.javafx.JavaFx
 import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.sync.Mutex
@@ -36,8 +40,21 @@ class TimeRecordingController : SuspendingController() {
         .toFormatter()
 
     // RecordingIssueProperty will be null when not recording
+    private val mutableRecordingIssueFlow = MutableStateFlow<TimeRecordingState>(TimeRecordingState.NoIssueRecording)
+    val recordingIssueState = mutableRecordingIssueFlow.asStateFlow()
     val recordingIssueProperty = SimpleObjectProperty<Issue?>(null)
     val timeSpentProperty = SimpleStringProperty("00:00:00")
+
+    init {
+        launch(Dispatchers.JavaFx) {
+            recordingIssueState.collect {
+                when (it) {
+                    is TimeRecordingState.IssueRecording -> recordingIssueProperty.set(it.issue)
+                    is TimeRecordingState.NoIssueRecording -> recordingIssueProperty.set(null)
+                }
+            }
+        }
+    }
 
     suspend fun startTiming(issue: Issue): RecordingStopResult {
         tickerJobMutex.withLock {
@@ -50,7 +67,7 @@ class TimeRecordingController : SuspendingController() {
             }
 
             tickerJob = launch { updateTime(issue) }
-            recordingIssueProperty.set(issue)
+            mutableRecordingIssueFlow.value = TimeRecordingState.IssueRecording(issue)
             return previousTimingResult
         }
     }
@@ -58,9 +75,7 @@ class TimeRecordingController : SuspendingController() {
     suspend fun stopTiming(): RecordingStopResult {
         tickerJobMutex.withLock {
             val timedIssue = unsafeStopTiming()
-            withContext(Dispatchers.JavaFx) {
-                recordingIssueProperty.set(null)
-            }
+            mutableRecordingIssueFlow.value = TimeRecordingState.NoIssueRecording
             return timedIssue
         }
     }

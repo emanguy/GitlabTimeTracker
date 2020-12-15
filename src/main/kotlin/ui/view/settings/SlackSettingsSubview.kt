@@ -49,8 +49,6 @@ class SlackSettingsSubview : SuspendingView() {
 
     init {
         registerBackgroundTaskInit {
-            println("Subview - starting background tasks")
-
             launch {
                 slackController.loadCredentials()
                 val controllerConfig = slackController.slackConfig
@@ -73,10 +71,6 @@ class SlackSettingsSubview : SuspendingView() {
                     }
                 }
             }
-        }
-
-        registerBackgroundTaskCleanup {
-            println("Subview - cleanup background tasks")
         }
     }
 

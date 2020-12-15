@@ -10,16 +10,6 @@ import tornadofx.vbox
 
 class SettingsView : SuspendingView("Time Tracker Settings") {
 
-    init {
-        registerBackgroundTaskInit {
-            println("Root settings - background tasks started")
-        }
-
-        registerBackgroundTaskCleanup {
-            println("Root settings - background task cleanup")
-        }
-    }
-
     override val root = vbox {
         addClass(LayoutStyles.typicalPaddingAndSpacing)
 

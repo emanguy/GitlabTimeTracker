@@ -2,6 +2,7 @@ package edu.erittenhouse.gitlabtimetracker.ui.fragment
 
 import edu.erittenhouse.gitlabtimetracker.controller.IssueController
 import edu.erittenhouse.gitlabtimetracker.controller.TimeRecordingController
+import edu.erittenhouse.gitlabtimetracker.controller.event.TimeRecordingState
 import edu.erittenhouse.gitlabtimetracker.controller.result.RecordingStopResult
 import edu.erittenhouse.gitlabtimetracker.controller.result.TimeRecordResult
 import edu.erittenhouse.gitlabtimetracker.model.Issue
@@ -81,7 +82,12 @@ class IssueListCellFragment : SuspendingListCellFragment<Issue>() {
         button(buttonText) {
             suspendingAction {
                 val issueSnapshot = item
-                val toRecord = if (issueSnapshot != null && issueSnapshot != timeRecordingController.recordingIssueProperty.get()) {
+                val timeRecordingState = timeRecordingController.recordingIssueState.value
+                val notTiming = timeRecordingState is TimeRecordingState.NoIssueRecording
+                val weHaveIssue = issueSnapshot != null
+                val thisIssueIsTiming = timeRecordingState is TimeRecordingState.IssueRecording && weHaveIssue && timeRecordingState.issue.idInProject == issueSnapshot.idInProject
+
+                val toRecord = if (notTiming || !thisIssueIsTiming) {
                     timeRecordingController.startTiming(issueSnapshot)
                 } else {
                     timeRecordingController.stopTiming()
