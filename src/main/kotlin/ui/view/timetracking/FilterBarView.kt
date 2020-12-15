@@ -27,6 +27,23 @@ class FilterBarView : SuspendingView() {
     private var milestoneFilterFlow by singleAssign<Flow<MilestoneFilterOption>>()
     private val ioErrorDebouncer = Debouncer()
 
+    init {
+        registerBackgroundTaskInit {
+            launch {
+                filterFieldFlow.collect {
+                    issueController.filterByIssueText(it)
+                }
+            }
+        }
+        registerBackgroundTaskInit {
+            launch {
+                milestoneFilterFlow.collect {
+                    issueController.selectMilestoneFilterOption(it)
+                }
+            }
+        }
+    }
+
     override val root = hbox {
         addClass(LayoutStyles.typicalPaddingAndSpacing, LayoutStyles.centerAlignLeft)
         text("Filter issues: ")
@@ -87,19 +104,5 @@ class FilterBarView : SuspendingView() {
     override fun onUncaughtCoroutineException(context: CoroutineContext, exception: Throwable) {
         super.onUncaughtCoroutineException(context, exception)
         ioErrorDebouncer.runDebounced { showErrorModalForIOErrors(exception) }
-    }
-
-    override fun onDock() {
-        super.onDock()
-        launch {
-            filterFieldFlow.collect {
-                issueController.filterByIssueText(it)
-            }
-        }
-        launch {
-            milestoneFilterFlow.collect {
-                issueController.selectMilestoneFilterOption(it)
-            }
-        }
     }
 }

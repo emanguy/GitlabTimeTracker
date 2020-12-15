@@ -10,6 +10,16 @@ import tornadofx.vbox
 
 class SettingsView : SuspendingView("Time Tracker Settings") {
 
+    init {
+        registerBackgroundTaskInit {
+            println("Root settings - background tasks started")
+        }
+
+        registerBackgroundTaskCleanup {
+            println("Root settings - background task cleanup")
+        }
+    }
+
     override val root = vbox {
         addClass(LayoutStyles.typicalPaddingAndSpacing)
 
@@ -18,15 +28,5 @@ class SettingsView : SuspendingView("Time Tracker Settings") {
         }
         separator()
         scopeAdd(SlackSettingsSubview::class)
-    }
-
-    override fun startBackgroundTasks() {
-        super.startBackgroundTasks()
-        println("Root settings - background tasks started")
-    }
-
-    override fun viewClosing() {
-        super.viewClosing()
-        println("Root settings - view closing")
     }
 }

@@ -20,7 +20,7 @@ class IssueListView : SuspendingView() {
         }
         borderpane {
             top {
-                add(FilterBarView::class)
+                scopeAdd(FilterBarView::class)
             }
             center {
                 listview(issueController.issueList) {

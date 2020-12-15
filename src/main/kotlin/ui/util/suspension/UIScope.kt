@@ -49,9 +49,14 @@ interface UIScope : CoroutineScope {
     fun <T> EventTarget.scopeAdd(type: KClass<T>, params: Map<*, Any?>? = null, op: T.() -> Unit = {})
         where T: UIComponent,
               T: UIScope
+    fun <T> EventTarget.scopeAdd(child: T)
+        where T: UIComponent,
+              T: UIScope
 
-    fun startBackgroundTasks()
-    fun viewClosing()
+    fun triggerBackgroundTasks()
+    fun triggerViewClosing()
+    fun registerBackgroundTaskInit(backgroundTaskInitFunction: () -> Unit)
+    fun registerBackgroundTaskCleanup(backgroundTaskCleanupFunction: () -> Unit)
 
     fun onUncaughtCoroutineException(context: CoroutineContext, exception: Throwable) {
         println("Uncaught coroutine exception.")
@@ -63,20 +68,39 @@ class UIScopeImpl : UIScope {
     private val ceh = CoroutineExceptionHandler(::onUncaughtCoroutineException)
     override val coroutineContext = SupervisorJob() + Dispatchers.JavaFx + ceh
 
+    private var backgroundJobsStarted = false
     private lateinit var component: UIComponent
     private var childScopes = emptyList<UIScope>()
+    private var backgroundTaskInitFunctions: List<() -> Unit> = emptyList()
+    private var backgroundTaskCleanupFunctions: List<() -> Unit> = emptyList()
 
     fun registerComponent(component: UIComponent) {
         this.component = component
     }
 
-    override fun startBackgroundTasks() {
-        childScopes.forEach { it.startBackgroundTasks() }
+    override fun triggerBackgroundTasks() {
+        if (backgroundJobsStarted) return
+        backgroundJobsStarted = true
+        val initFunctions = backgroundTaskInitFunctions
+        initFunctions.forEach { it() }
+        childScopes.forEach { it.triggerBackgroundTasks() }
     }
 
-    override fun viewClosing() {
+    override fun triggerViewClosing() {
+        if (!backgroundJobsStarted) return
+        backgroundJobsStarted = false
+        val cleanupFunctions = backgroundTaskCleanupFunctions
         coroutineContext.cancelChildren()
-        childScopes.forEach { it.viewClosing() }
+        cleanupFunctions.forEach { it() }
+        childScopes.forEach { it.triggerViewClosing() }
+    }
+
+    override fun registerBackgroundTaskInit(backgroundTaskInitFunction: () -> Unit) {
+        backgroundTaskInitFunctions = backgroundTaskInitFunctions + backgroundTaskInitFunction
+    }
+
+    override fun registerBackgroundTaskCleanup(backgroundTaskCleanupFunction: () -> Unit) {
+        backgroundTaskCleanupFunctions = backgroundTaskCleanupFunctions + backgroundTaskCleanupFunction
     }
 
     override fun <T> EventTarget.scopeAdd(type: KClass<T>, params: Map<*, Any?>?, op: T.() -> Unit)
@@ -86,5 +110,12 @@ class UIScopeImpl : UIScope {
         plusAssign(view.root)
         childScopes = childScopes + view
         op(view)
+    }
+
+    override fun <T> EventTarget.scopeAdd(child: T)
+        where T : UIComponent,
+              T : UIScope {
+        plusAssign(child.root)
+        childScopes = childScopes + child
     }
 }

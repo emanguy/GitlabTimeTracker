@@ -12,7 +12,6 @@ import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.showErrorModal
 import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.showErrorModalForIOErrors
 import edu.erittenhouse.gitlabtimetracker.ui.util.suspension.SuspendingView
 import edu.erittenhouse.gitlabtimetracker.ui.view.settings.SettingsView
-import javafx.event.EventHandler
 import javafx.geometry.Orientation
 import javafx.scene.layout.Pane
 import javafx.stage.Stage
@@ -48,6 +47,48 @@ class TimeTrackingView : SuspendingView("Gitlab Time Tracker") {
         userController.userProperty.onChange { user ->
             userDisplay.itemProperty.set(user)
         }
+
+        registerBackgroundTaskInit {
+            this.currentWindow?.apply {
+                width = 1300.0
+                height = 768.0
+            }
+        }
+        registerBackgroundTaskInit {
+            // Load current user data so we can have it ready and display it above the project list
+            launch {
+                when (userController.loadCurrentUser()) {
+                    is UserLoadResult.GotUser -> { /* Good to go! */ }
+                    is UserLoadResult.NoCredentials -> showErrorModal("Something went wrong. We didn't retrieve the credentials from the login page," +
+                            " please notify a developer!")
+                }
+            }
+        }
+        registerBackgroundTaskInit {
+            // Pull in the projects
+            launch {
+                when (projectController.fetchProjects()) {
+                    is ProjectFetchResult.ProjectsRetrieved -> { /* Good to go! */ }
+                    is ProjectFetchResult.NoCredentials -> showErrorModal("Something's wrong. We couldn't read your credentials " +
+                            "when trying to pull the list of projects.")
+                }
+            }
+        }
+        registerBackgroundTaskInit {
+            // Listen for user clicking the settings button, show dialog
+            launch {
+                listenForSettingsTrigger()
+            }
+        }
+        registerBackgroundTaskInit {
+            // Whenever we enter the view, make sure we show the unselected state
+            this.swappedChildren = false
+            this.issueListPane.replaceChildren {
+                text("Select a project to get started.") {
+                    addClass(TypographyStyles.title)
+                }
+            }
+        }
     }
 
     override val root = borderpane {
@@ -63,8 +104,8 @@ class TimeTrackingView : SuspendingView("Gitlab Time Tracker") {
                             maxWidth = 600.px
                         }
 
-                        add(userDisplay)
-                        add(ProjectListView::class)
+                        scopeAdd(userDisplay)
+                        scopeAdd(ProjectListView::class)
                     }
                     stackpane {
                         style {
@@ -82,45 +123,6 @@ class TimeTrackingView : SuspendingView("Gitlab Time Tracker") {
     override fun onUncaughtCoroutineException(context: CoroutineContext, exception: Throwable) {
         super.onUncaughtCoroutineException(context, exception)
         ioErrorDebouncer.runDebounced { showErrorModalForIOErrors(exception) }
-    }
-
-    override fun onDock() {
-        super.onDock()
-        this.currentWindow?.apply {
-            width = 1300.0
-            height = 768.0
-        }
-
-        // Load current user data so we can have it ready and display it above the project list
-        launch {
-            when (userController.loadCurrentUser()) {
-                is UserLoadResult.GotUser -> { /* Good to go! */ }
-                is UserLoadResult.NoCredentials -> showErrorModal("Something went wrong. We didn't retrieve the credentials from the login page," +
-                        " please notify a developer!")
-            }
-        }
-
-        // Pull in the projects
-        launch {
-            when (projectController.fetchProjects()) {
-                is ProjectFetchResult.ProjectsRetrieved -> { /* Good to go! */ }
-                is ProjectFetchResult.NoCredentials -> showErrorModal("Something's wrong. We couldn't read your credentials " +
-                        "when trying to pull the list of projects.")
-            }
-        }
-
-        // Listen for user clicking the settings button, show dialog
-        launch {
-            listenForSettingsTrigger()
-        }
-
-        // Whenever we enter the view, make sure we show the unselected state
-        this.swappedChildren = false
-        this.issueListPane.replaceChildren {
-            text("Select a project to get started.") {
-                addClass(TypographyStyles.title)
-            }
-        }
     }
 
     private suspend fun listenForSettingsTrigger() {

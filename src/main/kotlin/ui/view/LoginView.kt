@@ -26,6 +26,25 @@ class LoginView : SuspendingView("Gitlab Time Tracker - Login") {
     private val usePreviousCredentialsVisible = SimpleBooleanProperty(false)
     private val credentialIssueText = SimpleStringProperty("")
 
+    init {
+        registerBackgroundTaskInit {
+            launch {
+                val migrationSuccess = performSettingsMigration()
+
+                if (migrationSuccess && !credentialController.hasCredentials) {
+                    credentialController.loadCredentials()
+                    usePreviousCredentialsVisible.set(credentialController.hasCredentials)
+                }
+            }
+        }
+        registerBackgroundTaskInit {
+            this.currentStage?.apply {
+                width = 500.0
+                height = 400.0
+            }
+        }
+    }
+
     override val root = form {
         addClass(LayoutStyles.typicalPaddingAndSpacing)
 
@@ -53,27 +72,6 @@ class LoginView : SuspendingView("Gitlab Time Tracker - Login") {
             action {
                 replaceWith<TimeTrackingView>()
             }
-        }
-    }
-
-    override fun onDock() {
-        super.onDock()
-
-        launch {
-            val migrationSuccess = performSettingsMigration()
-
-            if (migrationSuccess && !credentialController.hasCredentials) {
-                credentialController.loadCredentials()
-                usePreviousCredentialsVisible.set(credentialController.hasCredentials)
-            }
-        }
-    }
-
-    override fun onBeforeShow() {
-        super.onBeforeShow()
-        this.currentStage?.apply {
-            width = 500.0
-            height = 400.0
         }
     }
 

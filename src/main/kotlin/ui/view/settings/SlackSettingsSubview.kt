@@ -47,6 +47,39 @@ class SlackSettingsSubview : SuspendingView() {
         var slackStatusText: String = ""
     }
 
+    init {
+        registerBackgroundTaskInit {
+            println("Subview - starting background tasks")
+
+            launch {
+                slackController.loadCredentials()
+                val controllerConfig = slackController.slackConfig
+                if (controllerConfig != null) {
+                    slackLoginText.set("Slack Authenticated: ${controllerConfig.credentialAndTeam.teamName}")
+                    FormControls.statusEmojiInput.text = controllerConfig.statusEmoji
+                    FormControls.slackStatusFormatInput.text = controllerConfig.slackStatusFormat
+
+                    FormValues.slackCredential = controllerConfig.credentialAndTeam
+                    FormValues.slackEmoji = controllerConfig.statusEmoji
+                    FormValues.slackStatusText = controllerConfig.slackStatusFormat
+                } else {
+                    slackLoginText.set("Connect to slack")
+                }
+                FormControls.integrationEnableToggle.isSelected = slackController.enabledState.value
+
+                this@SlackSettingsSubview.launch {
+                    slackController.enabledState.collect { slackEnabled ->
+                        FormControls.integrationEnableToggle.isSelected = slackEnabled
+                    }
+                }
+            }
+        }
+
+        registerBackgroundTaskCleanup {
+            println("Subview - cleanup background tasks")
+        }
+    }
+
     override val root = vbox {
         form {
             fieldset("Slack") {
@@ -128,39 +161,6 @@ class SlackSettingsSubview : SuspendingView() {
                 }
             }
         }
-    }
-
-    override fun startBackgroundTasks() {
-        super.startBackgroundTasks()
-        println("Subview - starting background tasks")
-
-        launch {
-            slackController.loadCredentials()
-            val controllerConfig = slackController.slackConfig
-            if (controllerConfig != null) {
-                slackLoginText.set("Slack Authenticated: ${controllerConfig.credentialAndTeam.teamName}")
-                FormControls.statusEmojiInput.text = controllerConfig.statusEmoji
-                FormControls.slackStatusFormatInput.text = controllerConfig.slackStatusFormat
-
-                FormValues.slackCredential = controllerConfig.credentialAndTeam
-                FormValues.slackEmoji = controllerConfig.statusEmoji
-                FormValues.slackStatusText = controllerConfig.slackStatusFormat
-            } else {
-                slackLoginText.set("Connect to slack")
-            }
-            FormControls.integrationEnableToggle.isSelected = slackController.enabledState.value
-
-            this@SlackSettingsSubview.launch {
-                slackController.enabledState.collect { slackEnabled ->
-                    FormControls.integrationEnableToggle.isSelected = slackEnabled
-                }
-            }
-        }
-    }
-
-    override fun viewClosing() {
-        super.viewClosing()
-        println("Subview - closing")
     }
 
     override fun onUncaughtCoroutineException(context: CoroutineContext, exception: Throwable) {
