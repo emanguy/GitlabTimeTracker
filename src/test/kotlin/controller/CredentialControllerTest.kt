@@ -1,9 +1,9 @@
 package edu.erittenhouse.gitlabtimetracker.controller
 
-import edu.erittenhouse.gitlabtimetracker.model.GitlabCredential
 import edu.erittenhouse.gitlabtimetracker.gitlab.dto.GitlabUser
+import edu.erittenhouse.gitlabtimetracker.model.GitlabCredential
 import edu.erittenhouse.gitlabtimetracker.util.CREDENTIAL_FILE_LOCATION
-import edu.erittenhouse.gitlabtimetracker.util.generateTestScope
+import edu.erittenhouse.gitlabtimetracker.util.generateTestGitlabScope
 import edu.erittenhouse.gitlabtimetracker.util.gitlabmock.AuthedUser
 import edu.erittenhouse.gitlabtimetracker.util.gitlabmock.GitlabMock
 import kotlinx.coroutines.runBlocking
@@ -25,7 +25,7 @@ class CredentialControllerTest {
             apiCredentials = setOf("abc123")
         )
     ))
-    private val scope = generateTestScope(gitlabState)
+    private val scope = generateTestGitlabScope(gitlabState)
     private val controller = find<CredentialController>(scope)
 
     @AfterEach
