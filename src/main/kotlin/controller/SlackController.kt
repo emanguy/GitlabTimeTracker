@@ -55,7 +55,7 @@ class SlackController : SuspendingController() {
     }
 
     /**
-     * Log in with slack, returning true if login was successful.
+     * Log in with slack, returning login status if login was successful.
      */
     suspend fun slackLogin(): SlackLoginResult =
         when (val slackCredentialResult = slackAPI.authHandler.authenticateSlack()) {
@@ -64,6 +64,9 @@ class SlackController : SuspendingController() {
             is LoginResult.AuthAlreadyInProgress -> SlackLoginResult.AlreadyLoggingIn
         }
 
+    /**
+     * Enable the slack integration, using the provided options
+     */
     suspend fun enableSlackIntegration(slackCredential: SlackCredential, emoji: String, messageFormat: String) {
         val newConfig = SlackConfig(slackCredential, emoji, messageFormat)
         settingsManager.setSlackConfig(true, newConfig)
@@ -71,11 +74,19 @@ class SlackController : SuspendingController() {
         mutableEnabledState.value = true
     }
 
+    /**
+     * Disable the slack integration
+     */
     suspend fun disableSlackIntegration() {
         settingsManager.setSlackConfig(slackEnabled = false)
         mutableEnabledState.value = false
     }
 
+    /**
+     * Update user's slack status based on an [issue] they're working on.
+     *
+     * This function does nothing if slack integration is not enabled.
+     */
     suspend fun updateSlackStatus(issue: Issue) {
         val config = slackConfig ?: return
         if (!enabledState.value) return
@@ -94,12 +105,13 @@ class SlackController : SuspendingController() {
         }
     }
 
+    /**
+     * Clears user's slack status. Does nothing if slack integration isn't enabled.
+     */
     suspend fun clearSlackStatus() {
         val config = slackConfig ?: return
         if (!enabledState.value) return
 
-        withContext(Dispatchers.Default) {
-            slackAPI.profileAPI.updateStatus(config.credentialAndTeam, "", "")
-        }
+        slackAPI.profileAPI.updateStatus(config.credentialAndTeam, "", "")
     }
 }
