@@ -1,3 +1,5 @@
+@file:Suppress("FunctionName")
+
 package edu.erittenhouse.gitlabtimetracker.model.settings
 
 import edu.erittenhouse.gitlabtimetracker.model.GitlabCredential

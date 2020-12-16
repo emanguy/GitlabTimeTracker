@@ -11,6 +11,7 @@ abstract class SuspendingFragment private constructor(
     private val scopeImpl: UIScopeImpl
 ) : Fragment(title, icon), UIScope by scopeImpl {
     constructor(title: String? = null, icon: Node? = null) : this(title, icon, UIScopeImpl()) {
+        @Suppress("LeakingThis")
         scopeImpl.registerComponent(this)
     }
 

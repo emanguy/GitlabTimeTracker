@@ -8,6 +8,7 @@ abstract class SuspendingItemFragment<T> private constructor(
     private val scopeImpl: UIScopeImpl
 ) : ItemFragment<T>(), UIScope by scopeImpl {
     constructor() : this(UIScopeImpl()) {
+        @Suppress("LeakingThis")
         scopeImpl.registerComponent(this)
     }
 

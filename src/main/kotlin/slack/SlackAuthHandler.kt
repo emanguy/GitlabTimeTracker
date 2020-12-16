@@ -60,6 +60,7 @@ class SlackAuthHandler : ISlackAuthHandler {
         }
 
         withContext(Dispatchers.IO) {
+            @Suppress("BlockingMethodInNonBlockingContext")
             Desktop.getDesktop().browse(URI.create(redirectURL))
         }
 

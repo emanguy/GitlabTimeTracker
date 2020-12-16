@@ -38,6 +38,7 @@ suspend fun migrateSettingsFile(fileLocation: String): FileMigrationResult = wit
 
     // Write migrated result to file and continue
     try {
+        @Suppress("BlockingMethodInNonBlockingContext")
         JsonMapper.writeValue(file, migratedSettings)
     } catch (e: Exception) {
         throw SettingsErrors.DiskIOError(fileLocation, "Failed to write migrated settings to file", e)

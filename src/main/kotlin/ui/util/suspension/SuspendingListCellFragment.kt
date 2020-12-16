@@ -8,6 +8,7 @@ abstract class SuspendingListCellFragment<T> private constructor(
     private val scopeImpl: UIScopeImpl
 ) : ListCellFragment<T>(), UIScope by scopeImpl {
     constructor() : this(UIScopeImpl()) {
+        @Suppress("LeakingThis")
         scopeImpl.registerComponent(this)
     }
 

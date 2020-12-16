@@ -11,6 +11,7 @@ abstract class SuspendingView private constructor(
     private val scopeImpl: UIScopeImpl,
 ) : View(title, icon), UIScope by scopeImpl {
     constructor(title: String? = null, icon: Node? = null) : this(title, icon, UIScopeImpl()) {
+        @Suppress("LeakingThis")
         scopeImpl.registerComponent(this)
     }
 

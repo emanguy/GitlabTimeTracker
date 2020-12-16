@@ -33,6 +33,7 @@ class IssueController : Controller() {
     val selectedProject = SimpleObjectProperty<Project>()
     val issueList = mutableListOf<Issue>().asObservable()
     val milestoneFilterOptions = initialFilterOptions.toMutableList().asObservable()
+    @Suppress("RemoveExplicitTypeArguments")
     val filter = SimpleObjectProperty<IssueFilter>(IssueFilter())
 
     private sealed class IssuesAndMilestonesResult {
