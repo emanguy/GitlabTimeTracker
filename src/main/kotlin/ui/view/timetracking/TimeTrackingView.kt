@@ -112,7 +112,7 @@ class TimeTrackingView : SuspendingView("Gitlab Time Tracker") {
                             maxWidth = 600.px
                         }
 
-                        scopeAdd(userDisplay)
+                        add(userDisplay)
                         scopeAdd(ProjectListView::class)
                     }
                     stackpane {
@@ -125,7 +125,7 @@ class TimeTrackingView : SuspendingView("Gitlab Time Tracker") {
             }
         }
 
-        bottom(TimeRecordingBarView::class)
+        scopeBottom(TimeRecordingBarView::class)
     }
 
     override fun onUncaughtCoroutineException(context: CoroutineContext, exception: Throwable) {

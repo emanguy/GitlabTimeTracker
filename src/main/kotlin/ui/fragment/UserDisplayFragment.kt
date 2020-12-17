@@ -3,27 +3,21 @@ package edu.erittenhouse.gitlabtimetracker.ui.fragment
 import edu.erittenhouse.gitlabtimetracker.model.User
 import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles
 import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
-import edu.erittenhouse.gitlabtimetracker.ui.util.Debouncer
-import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.flexSpacer
-import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.showErrorModalForIOErrors
-import edu.erittenhouse.gitlabtimetracker.ui.util.suspension.SuspendingItemFragment
+import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.flexspacer
 import javafx.beans.property.SimpleStringProperty
 import javafx.scene.shape.Circle
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import tornadofx.*
-import kotlin.coroutines.CoroutineContext
 
-class UserDisplayFragment : SuspendingItemFragment<User>() {
+class UserDisplayFragment : ItemFragment<User>() {
     private val usersNameProperty = SimpleStringProperty("")
     private val usersUsernameProperty = SimpleStringProperty("")
     private val usersPhotoURLProperty = SimpleStringProperty("/LoadingPlaceholder.jpg")
 
-    private val ioExceptionDebouncer = Debouncer()
-
-    private val _settingsTriggerFlow = MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_LATEST)
-    val settingsTriggerFlow = _settingsTriggerFlow.asSharedFlow()
+    private val mutableSettingsTriggerFlow = MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_LATEST)
+    val settingsTriggerFlow = mutableSettingsTriggerFlow.asSharedFlow()
 
     init {
         itemProperty.onChange { user ->
@@ -52,17 +46,12 @@ class UserDisplayFragment : SuspendingItemFragment<User>() {
             }
         }
 
-        flexSpacer()
+        flexspacer()
 
         button("Settings") {
             action {
-                _settingsTriggerFlow.tryEmit(Unit)
+                mutableSettingsTriggerFlow.tryEmit(Unit)
             }
         }
-    }
-
-    override fun onUncaughtCoroutineException(context: CoroutineContext, exception: Throwable) {
-        super.onUncaughtCoroutineException(context, exception)
-        ioExceptionDebouncer.runDebounced { showErrorModalForIOErrors(exception) }
     }
 }

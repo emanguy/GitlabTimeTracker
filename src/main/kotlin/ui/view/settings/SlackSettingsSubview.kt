@@ -3,9 +3,10 @@ package edu.erittenhouse.gitlabtimetracker.ui.view.settings
 import edu.erittenhouse.gitlabtimetracker.controller.SlackController
 import edu.erittenhouse.gitlabtimetracker.controller.result.SlackLoginResult
 import edu.erittenhouse.gitlabtimetracker.model.SlackCredential
+import edu.erittenhouse.gitlabtimetracker.ui.style.FormStyles
 import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
 import edu.erittenhouse.gitlabtimetracker.ui.util.Debouncer
-import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.flexSpacer
+import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.flexspacer
 import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.showErrorModalForIOErrors
 import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.toggleswitch
 import edu.erittenhouse.gitlabtimetracker.ui.util.suspension.SuspendingView
@@ -37,15 +38,14 @@ class SlackSettingsSubview : SuspendingView() {
         var slackStatusFormatInput by singleAssign<TextField>()
         var integrationEnableToggle by singleAssign<ToggleSwitch>()
     }
-
-    private val errorMessageDebouncer = Debouncer()
-    private val slackController by inject<SlackController>()
-
     private object FormValues {
         var slackCredential: SlackCredential? = null
         var slackEmoji: String = ""
         var slackStatusText: String = ""
     }
+
+    private val errorMessageDebouncer = Debouncer()
+    private val slackController by inject<SlackController>()
 
     init {
         registerBackgroundTaskInit {
@@ -72,13 +72,35 @@ class SlackSettingsSubview : SuspendingView() {
                 }
             }
         }
+
+        registerBackgroundTaskInit {
+            launch {
+                FormControls.statusEmojiInput.textProperty().asFlow()
+                    .debounce(500)
+                    .collect { newTextValue ->
+                        FormValues.slackEmoji = newTextValue
+                        updateValidationStateAndPersistIfEnabled()
+                    }
+            }
+        }
+
+        registerBackgroundTaskInit {
+            launch {
+                FormControls.slackStatusFormatInput.textProperty().asFlow()
+                    .debounce(500)
+                    .collect { newTextValue ->
+                        FormValues.slackStatusText = newTextValue
+                        updateValidationStateAndPersistIfEnabled()
+                    }
+            }
+        }
     }
 
     override val root = vbox {
         form {
             fieldset("Slack") {
                 hbox {
-                    flexSpacer()
+                    flexspacer()
                     button(slackLoginText) {
                         suspendingAction {
                             doSlackLogin()
@@ -93,14 +115,6 @@ class SlackSettingsSubview : SuspendingView() {
                 field("Status emoji") {
                     FormControls.statusEmojiInput = textfield {
                         promptText = "Emoji code, i.e. :thinking:"
-                        launch {
-                            textProperty().asFlow()
-                                .debounce(500)
-                                .collect { newTextValue ->
-                                    FormValues.slackEmoji = newTextValue
-                                    updateValidationStateAndPersistIfEnabled()
-                                }
-                        }
                     }
                 }
                 text(ErrorTextBindings.emojiCodeText) {
@@ -111,15 +125,6 @@ class SlackSettingsSubview : SuspendingView() {
                 field("Slack status template") {
                     FormControls.slackStatusFormatInput = textfield {
                         promptText = "Working issue #{{issueNumber}}"
-
-                        launch {
-                            textProperty().asFlow()
-                                .debounce(500)
-                                .collect { newTextValue ->
-                                    FormValues.slackStatusText = newTextValue
-                                    updateValidationStateAndPersistIfEnabled()
-                                }
-                        }
                     }
                 }
                 text(ErrorTextBindings.statusMessageText) {
@@ -189,7 +194,10 @@ class SlackSettingsSubview : SuspendingView() {
     private suspend fun updateValidationStateAndPersistIfEnabled() {
         // Reset error text
         ErrorTextBindings.emojiCodeText.set("")
+        FormControls.statusEmojiInput.removeClass(FormStyles.fieldInvalidBorder)
         ErrorTextBindings.statusMessageText.set("")
+        FormControls.slackStatusFormatInput.removeClass(FormStyles.fieldInvalidBorder)
+
         val slackCredentialValue = FormValues.slackCredential
         var formValid = true
 
@@ -200,8 +208,13 @@ class SlackSettingsSubview : SuspendingView() {
 
         // Can't enable if the emoji the user wants isn't surrounded with colons
         with (FormValues.slackEmoji) {
-            if (isEmpty() || !startsWith(":") || !endsWith(":")) {
+            if (isEmpty()) {
+                ErrorTextBindings.emojiCodeText.set("You must provide an emoji for your status to enable slack integration.")
+                FormControls.statusEmojiInput.addClass(FormStyles.fieldInvalidBorder)
+                formValid = false
+            } else if (!startsWith(":") || !endsWith(":") || length == 1) {
                 ErrorTextBindings.emojiCodeText.set("The emoji you provide must start and end with colons (:), like in slack.")
+                FormControls.statusEmojiInput.addClass(FormStyles.fieldInvalidBorder)
                 formValid = false
             }
         }
@@ -209,6 +222,7 @@ class SlackSettingsSubview : SuspendingView() {
         // Can't enable if the status field is empty
         if (FormValues.slackStatusText.isEmpty()) {
             ErrorTextBindings.statusMessageText.set("You must provide a status message to enable slack integration.")
+            FormControls.slackStatusFormatInput.addClass(FormStyles.fieldInvalidBorder)
             formValid = false
         }
 

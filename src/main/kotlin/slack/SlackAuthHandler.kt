@@ -20,7 +20,6 @@ import kotlinx.coroutines.future.await
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.html.*
 import java.awt.Desktop
 import java.net.URI
@@ -142,7 +141,10 @@ class SlackAuthHandler : ISlackAuthHandler {
             }
 
             if (!tokenResponse.isOk) {
+                println("Token retrieve response not ok. Error: ${tokenResponse.error}")
                 call.sendAuthFailPage(tokenResponse.error)
+                authChannel.send(null)
+                return@get
             }
 
             val accessToken = tokenResponse.authedUser?.accessToken ?: run {
@@ -217,13 +219,4 @@ class SlackAuthHandler : ISlackAuthHandler {
             }
         }
     }
-}
-
-suspend fun main() {
-    val authHandler = SlackAuthHandler()
-    withTimeoutOrNull(3000) {
-        authHandler.authenticateSlack()
-    }
-    val loginResult = authHandler.authenticateSlack()
-    println("Login result: $loginResult")
 }

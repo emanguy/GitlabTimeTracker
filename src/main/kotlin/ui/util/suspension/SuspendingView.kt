@@ -1,8 +1,6 @@
 package edu.erittenhouse.gitlabtimetracker.ui.util.suspension
 
-import javafx.event.EventTarget
 import javafx.scene.Node
-import tornadofx.UIComponent
 import tornadofx.View
 
 abstract class SuspendingView private constructor(
@@ -25,12 +23,4 @@ abstract class SuspendingView private constructor(
     }
     override fun registerBackgroundTaskInit(backgroundTaskInitFunction: () -> Unit) = scopeImpl.registerBackgroundTaskInit(backgroundTaskInitFunction)
     override fun registerBackgroundTaskCleanup(backgroundTaskCleanupFunction: () -> Unit) = scopeImpl.registerBackgroundTaskCleanup(backgroundTaskCleanupFunction)
-    override fun <T> EventTarget.scopeAdd(child: T)
-        where T : UIComponent,
-              T : UIScope {
-        val evtTarget = this
-        with (scopeImpl) {
-            evtTarget.scopeAdd(child)
-        }
-    }
 }

@@ -13,7 +13,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.javafx.JavaFx
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -28,7 +27,7 @@ class SlackController : SuspendingController() {
     val enabledState = mutableEnabledState.asStateFlow()
 
     init {
-        launch(Dispatchers.JavaFx) {
+        launch {
             timeRecordingController.recordingIssueState.collect { recordingState ->
                 if (enabledState.value) {
                     try {
@@ -43,6 +42,7 @@ class SlackController : SuspendingController() {
             }
         }
     }
+
     /**
      * Loads slack credentials from disk into the controller.
      */

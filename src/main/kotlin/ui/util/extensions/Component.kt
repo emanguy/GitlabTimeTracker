@@ -8,11 +8,18 @@ import tornadofx.hgrow
 import tornadofx.opcr
 import tornadofx.region
 
-fun EventTarget.flexSpacer(additionalConfig: Region.() -> Unit = {}) = region {
+/**
+ * Creates a region that expands to fill space. Useful for pushing UI components against the edges
+ * of their parent container.
+ */
+fun EventTarget.flexspacer(additionalConfig: Region.() -> Unit = {}) = region {
     hgrow = Priority.ALWAYS
     additionalConfig()
 }
 
+/**
+ * Creates a toggle switch, optionally with a [label].
+ */
 fun EventTarget.toggleswitch(label: String? = null, additionalConfig: ToggleSwitch.() -> Unit = {}): ToggleSwitch {
     val switch =  if (label == null) {
         ToggleSwitch()

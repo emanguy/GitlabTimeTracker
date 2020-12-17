@@ -1,8 +1,6 @@
 package edu.erittenhouse.gitlabtimetracker.ui.util.suspension
 
-import javafx.event.EventTarget
 import tornadofx.ListCellFragment
-import tornadofx.UIComponent
 
 abstract class SuspendingListCellFragment<T> private constructor(
     private val scopeImpl: UIScopeImpl
@@ -22,12 +20,4 @@ abstract class SuspendingListCellFragment<T> private constructor(
     }
     override fun registerBackgroundTaskInit(backgroundTaskInitFunction: () -> Unit) = scopeImpl.registerBackgroundTaskInit(backgroundTaskInitFunction)
     override fun registerBackgroundTaskCleanup(backgroundTaskCleanupFunction: () -> Unit) = scopeImpl.registerBackgroundTaskCleanup(backgroundTaskCleanupFunction)
-    override fun <T> EventTarget.scopeAdd(child: T)
-            where T : UIComponent,
-                  T : UIScope {
-        val evtTarget = this
-        with (scopeImpl) {
-            evtTarget.scopeAdd(child)
-        }
-    }
 }

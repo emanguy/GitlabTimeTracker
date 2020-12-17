@@ -9,6 +9,7 @@ import edu.erittenhouse.gitlabtimetracker.io.result.FileMigrationResult
 import edu.erittenhouse.gitlabtimetracker.model.GitlabCredential
 import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles
 import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
+import edu.erittenhouse.gitlabtimetracker.ui.util.Debouncer
 import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.showErrorModal
 import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.showOKModal
 import edu.erittenhouse.gitlabtimetracker.ui.util.suspension.SuspendingView
@@ -25,6 +26,7 @@ class LoginView : SuspendingView("Gitlab Time Tracker - Login") {
     private val credentialController: CredentialController by inject()
     private val usePreviousCredentialsVisible = SimpleBooleanProperty(false)
     private val credentialIssueText = SimpleStringProperty("")
+    private val errorDebouncer = Debouncer()
 
     init {
         registerBackgroundTaskInit {
@@ -77,10 +79,12 @@ class LoginView : SuspendingView("Gitlab Time Tracker - Login") {
 
     override fun onUncaughtCoroutineException(context: CoroutineContext, exception: Throwable) {
         super.onUncaughtCoroutineException(context, exception)
-        when (exception) {
-            is SettingsErrors.DiskIOError -> credentialIssueText.set("${exception.message} If your ${exception.problemFilepath} file still exists, please delete it.")
-            is HttpErrors, is SettingsErrors -> showErrorModal(generateMessageForIOExceptions(exception))
-            else -> showErrorModal("We had an issue: ${exception.message}")
+        errorDebouncer.runDebounced {
+            when (exception) {
+                is SettingsErrors.DiskIOError -> credentialIssueText.set("${exception.message} If your ${exception.problemFilepath} file still exists, please delete it.")
+                is HttpErrors, is SettingsErrors -> showErrorModal(generateMessageForIOExceptions(exception))
+                else -> showErrorModal("We had an issue: ${exception.message}")
+            }
         }
     }
 
