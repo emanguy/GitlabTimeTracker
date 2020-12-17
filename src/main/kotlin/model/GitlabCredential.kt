@@ -1,4 +1,4 @@
-package edu.erittenhouse.gitlabtimetracker.gitlab
+package edu.erittenhouse.gitlabtimetracker.model
 
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.http.HttpHeaders

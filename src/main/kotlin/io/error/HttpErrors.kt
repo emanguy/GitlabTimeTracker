@@ -1,6 +1,6 @@
-package edu.erittenhouse.gitlabtimetracker.gitlab.error
+package edu.erittenhouse.gitlabtimetracker.io.error
 
-import io.ktor.client.features.ResponseException
+import io.ktor.client.features.*
 
 sealed class HttpErrors : Exception() {
     class InvalidResponseError(val status: Int, override val message: String, override val cause: Exception? = null) : HttpErrors()

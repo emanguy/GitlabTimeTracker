@@ -5,7 +5,7 @@ import edu.erittenhouse.gitlabtimetracker.controller.result.ProjectSelectResult
 import edu.erittenhouse.gitlabtimetracker.controller.result.TimeRecordResult
 import edu.erittenhouse.gitlabtimetracker.controller.result.UserLoadResult
 import edu.erittenhouse.gitlabtimetracker.gitlab.GitlabAPI
-import edu.erittenhouse.gitlabtimetracker.gitlab.error.HttpErrors
+import edu.erittenhouse.gitlabtimetracker.io.error.HttpErrors
 import edu.erittenhouse.gitlabtimetracker.model.Issue
 import edu.erittenhouse.gitlabtimetracker.model.IssueWithTime
 import edu.erittenhouse.gitlabtimetracker.model.Milestone
@@ -33,6 +33,7 @@ class IssueController : Controller() {
     val selectedProject = SimpleObjectProperty<Project>()
     val issueList = mutableListOf<Issue>().asObservable()
     val milestoneFilterOptions = initialFilterOptions.toMutableList().asObservable()
+    @Suppress("RemoveExplicitTypeArguments")
     val filter = SimpleObjectProperty<IssueFilter>(IssueFilter())
 
     private sealed class IssuesAndMilestonesResult {

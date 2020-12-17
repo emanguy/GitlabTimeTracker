@@ -5,7 +5,8 @@ import edu.erittenhouse.gitlabtimetracker.gitlab.dto.GitlabIssue
 import edu.erittenhouse.gitlabtimetracker.gitlab.dto.GitlabMilestone
 import edu.erittenhouse.gitlabtimetracker.gitlab.dto.GitlabProject
 import edu.erittenhouse.gitlabtimetracker.gitlab.dto.GitlabUser
-import edu.erittenhouse.gitlabtimetracker.gitlab.error.HttpErrors
+import edu.erittenhouse.gitlabtimetracker.io.error.HttpErrors
+import edu.erittenhouse.gitlabtimetracker.model.GitlabCredential
 import edu.erittenhouse.gitlabtimetracker.model.TimeSpend
 import edu.erittenhouse.gitlabtimetracker.model.filter.MilestoneFilterOption
 import kotlinx.coroutines.sync.Mutex

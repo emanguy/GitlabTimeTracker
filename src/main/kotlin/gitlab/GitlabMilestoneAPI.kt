@@ -1,7 +1,9 @@
 package edu.erittenhouse.gitlabtimetracker.gitlab
 
 import edu.erittenhouse.gitlabtimetracker.gitlab.dto.GitlabMilestone
-import edu.erittenhouse.gitlabtimetracker.gitlab.error.catchingErrors
+import edu.erittenhouse.gitlabtimetracker.io.error.catchingErrors
+import edu.erittenhouse.gitlabtimetracker.model.GitlabCredential
+import edu.erittenhouse.gitlabtimetracker.model.addGitlabCredentials
 import io.ktor.client.*
 import io.ktor.client.request.*
 import kotlinx.coroutines.Dispatchers

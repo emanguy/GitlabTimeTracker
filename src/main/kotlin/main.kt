@@ -2,6 +2,6 @@ package edu.erittenhouse.gitlabtimetracker
 
 import tornadofx.launch
 
-fun main() {
-    launch<GitlabTimeTrackerApp>()
+fun main(args: Array<String>) {
+    launch<GitlabTimeTrackerApp>(args)
 }

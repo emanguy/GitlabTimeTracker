@@ -1,13 +1,13 @@
 package edu.erittenhouse.gitlabtimetracker.controller
 
-import edu.erittenhouse.gitlabtimetracker.gitlab.CredentialManager
 import edu.erittenhouse.gitlabtimetracker.gitlab.GitlabAPI
-import edu.erittenhouse.gitlabtimetracker.gitlab.GitlabCredential
+import edu.erittenhouse.gitlabtimetracker.io.SettingsManager
+import edu.erittenhouse.gitlabtimetracker.model.GitlabCredential
 import tornadofx.Controller
 
 class CredentialController : Controller() {
     private val gitlabAPI by inject<GitlabAPI>()
-    private val credentialManager = CredentialManager(find<StorageConfig>().fileLocation)
+    private val credentialManager = SettingsManager(find<StorageConfig>().fileLocation)
     var credentials: GitlabCredential? = null
         private set
 

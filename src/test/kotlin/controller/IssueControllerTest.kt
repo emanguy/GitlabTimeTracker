@@ -3,13 +3,12 @@ package edu.erittenhouse.gitlabtimetracker.controller
 import edu.erittenhouse.gitlabtimetracker.controller.result.IssueRefreshResult
 import edu.erittenhouse.gitlabtimetracker.controller.result.ProjectSelectResult
 import edu.erittenhouse.gitlabtimetracker.controller.result.TimeRecordResult
-import edu.erittenhouse.gitlabtimetracker.gitlab.GitlabCredential
 import edu.erittenhouse.gitlabtimetracker.gitlab.dto.*
-import edu.erittenhouse.gitlabtimetracker.gitlab.error.HttpErrors
+import edu.erittenhouse.gitlabtimetracker.io.error.HttpErrors
 import edu.erittenhouse.gitlabtimetracker.model.*
 import edu.erittenhouse.gitlabtimetracker.model.filter.MilestoneFilterOption
 import edu.erittenhouse.gitlabtimetracker.util.CREDENTIAL_FILE_LOCATION
-import edu.erittenhouse.gitlabtimetracker.util.generateTestScope
+import edu.erittenhouse.gitlabtimetracker.util.generateTestGitlabScope
 import edu.erittenhouse.gitlabtimetracker.util.gitlabmock.*
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
@@ -181,7 +180,7 @@ class IssueControllerTest {
             currentUser,
         ),
     )
-    private val scope = generateTestScope(gitlabState)
+    private val scope = generateTestGitlabScope(gitlabState)
     private val controller = find<IssueController>(scope)
     private val credentialController = find<CredentialController>(scope)
 

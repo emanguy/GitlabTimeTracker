@@ -51,7 +51,7 @@ class ProjectListCellFragment : ListCellFragment<Project>() {
                 prefWidth = 100.percent
             }
             text(projectGitlabPath) {
-                addClass(TypographyStyles.subtitle)
+                addClass(TypographyStyles.metadata)
             }
             region {
                 hgrow = Priority.ALWAYS
