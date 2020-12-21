@@ -7,6 +7,7 @@ import edu.erittenhouse.gitlabtimetracker.io.error.SettingsErrors
 import edu.erittenhouse.gitlabtimetracker.io.migrateSettingsFile
 import edu.erittenhouse.gitlabtimetracker.io.result.FileMigrationResult
 import edu.erittenhouse.gitlabtimetracker.model.GitlabCredential
+import edu.erittenhouse.gitlabtimetracker.ui.style.Images
 import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles
 import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
 import edu.erittenhouse.gitlabtimetracker.ui.util.Debouncer
@@ -61,10 +62,7 @@ class LoginView : SuspendingView("Gitlab Time Tracker - Login") {
         val apiTokenField = textfield()
 
         button("Log in") {
-            imageview("/LogIn.png") {
-                fitWidth = 16.0
-                fitHeight = 16.0
-            }
+            imageview(Images.login)
             suspendingAction {
                 attemptLogin(urlField.text, apiTokenField.text)
             }

@@ -1,6 +1,7 @@
 package edu.erittenhouse.gitlabtimetracker.ui.fragment
 
 import edu.erittenhouse.gitlabtimetracker.model.Project
+import edu.erittenhouse.gitlabtimetracker.ui.style.Images
 import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles
 import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
 import javafx.beans.property.SimpleStringProperty
@@ -59,10 +60,7 @@ class ProjectListCellFragment : ListCellFragment<Project>() {
             }
             button {
                 tooltip("Go to project")
-                imageview("/NewWindow.png") {
-                    fitWidth = 16.0
-                    fitHeight = 16.0
-                }
+                imageview(Images.newWindow)
                 action {
                     hostServices.showDocument(projectUrl)
                 }

@@ -6,6 +6,7 @@ import edu.erittenhouse.gitlabtimetracker.controller.event.TimeRecordingState
 import edu.erittenhouse.gitlabtimetracker.controller.result.RecordingStopResult
 import edu.erittenhouse.gitlabtimetracker.controller.result.TimeRecordResult
 import edu.erittenhouse.gitlabtimetracker.model.Issue
+import edu.erittenhouse.gitlabtimetracker.ui.style.Images
 import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles
 import edu.erittenhouse.gitlabtimetracker.ui.style.ProgressStyles
 import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
@@ -72,14 +73,13 @@ class IssueListCellFragment : SuspendingListCellFragment<Issue>() {
 
         return@booleanBinding currentIssue != null && currentIssue.idInProject == currentlyRecordingIssue?.idInProject
     }
-    private val buttonIcon = isTimingProperty.stringBinding { isTiming -> if (isTiming == true) "/StopAndSubmit.png" else "/Play.png" }
+    private val buttonIcon = isTimingProperty.stringBinding { isTiming -> if (isTiming == true) Images.stopAndSubmit else Images.play }
     private val buttonTooltip = isTimingProperty.stringBinding { isTiming -> if (isTiming == true) "Stop recording time and submit" else "Start recording time"}
 
     override val root = hbox {
         addClass(LayoutStyles.typicalPaddingAndSpacing)
         button {
-            imageview(buttonIcon) {
-            }
+            imageview(buttonIcon)
             tooltip {
                 this.textProperty().bind(buttonTooltip)
             }
