@@ -17,6 +17,7 @@ enum class MethodIdentifier {
     LIST_USER_MEMBER_PROJECTS,
     GET_MILESTONES_FOR_PROJECT,
     GET_ISSUES_FOR_PROJECT,
+    GET_ISSUE_IN_PROJECT_BY_ID,
     ADD_TIME_SPENT_TO_ISSUE,
     GET_CURRENT_USER,
 }
@@ -88,6 +89,19 @@ class GitlabMock(var projects: List<ProjectMock> = emptyList(), var users: List<
             is MilestoneFilterOption.SelectedMilestone ->
                 projectIssues.filter { it.assignedUserID == userID && it.issue.milestone?.idInProject == milestoneFilter.milestone.idInProject }.extractIssues()
         }
+    }
+
+    override suspend fun getIssueInProjectByID(
+        credentials: GitlabCredential,
+        projectID: Int,
+        issueIDInProject: Int
+    ): GitlabIssue? {
+        if (!testCredentials(credentials)) throw HttpErrors.InvalidResponseError(401, "Bad credentials")
+        throwIfNecessary(MethodIdentifier.GET_ISSUE_IN_PROJECT_BY_ID)
+
+        val localProjectsList = projects
+        val projectWithIssue = localProjectsList.find { it.projectData.id == projectID } ?: return null
+        return projectWithIssue.issues.find { it.issue.idInProject == issueIDInProject }?.issue ?: return null
     }
 
     override suspend fun addTimeSpentToIssue(

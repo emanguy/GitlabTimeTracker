@@ -1,5 +1,8 @@
+@file:Suppress("ClassName")
+
 package edu.erittenhouse.gitlabtimetracker.controller
 
+import edu.erittenhouse.gitlabtimetracker.controller.result.IssueFetchResult
 import edu.erittenhouse.gitlabtimetracker.controller.result.IssueRefreshResult
 import edu.erittenhouse.gitlabtimetracker.controller.result.ProjectSelectResult
 import edu.erittenhouse.gitlabtimetracker.controller.result.TimeRecordResult
@@ -13,8 +16,9 @@ import edu.erittenhouse.gitlabtimetracker.util.gitlabmock.*
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import tornadofx.find
+import tornadofx.*
 import java.io.File
 
 
@@ -192,13 +196,7 @@ class IssueControllerTest {
     @Test
     fun `Retrieves issues for current user`() {
         runBlocking {
-            // Load credentials
-            val credentialSuccess = credentialController.tryAddCredentials(GitlabCredential("https://fake.gitlab", "jdoe-creds"))
-            assertTrue(credentialSuccess)
-
-            // Select the project
-            val selectResult = controller.selectProject(Project.fromGitlabDto(neatProjectData))
-            assert(selectResult == ProjectSelectResult.IssuesLoaded)
+            prepareControllers(neatProjectData)
 
             // Verify that correct issues are loaded
             assert(controller.issueList.size == 3)
@@ -216,153 +214,193 @@ class IssueControllerTest {
         }
     }
 
-    @Test
-    fun `Can filter by issue title and number`() {
-        runBlocking {
-            val credentialLoadResult = credentialController.tryAddCredentials(GitlabCredential("https://fake.gitlab", "jdoe-creds"))
-            assertTrue(credentialLoadResult)
+    @Nested
+    inner class `Fetch issue by ID` {
+        @Test
+        fun `Can find issue by ID`() {
+            runBlocking {
+                prepareControllers(neatProjectData)
 
-            val projectLoadResult = controller.selectProject(Project.fromGitlabDto(neatProjectData))
-            assert(projectLoadResult == ProjectSelectResult.IssuesLoaded)
+                // Snag issue by ID
+                val foundIssueResult = controller.fetchIssueByID(coffeeIssue.issue.idInProject)
+                assertTrue(foundIssueResult is IssueFetchResult.IssueFound && foundIssueResult.issue == Issue.fromGitlabDto(coffeeIssue.issue))
+            }
+        }
 
-            // Test filtering by text
-            controller.filterByIssueText("Reticulate")
-            assert(controller.issueList.size == 1)
-            assert(controller.issueList[0] == Issue.fromGitlabDto(reticulateSplinesIssue.issue))
+        @Test
+        fun `Fetch by ID fails with not found when issue does not exist on project`() {
+            runBlocking {
+                prepareControllers(neatProjectData)
 
-            // Test filtering by number
-            controller.filterByIssueText("#2")
-            assert(controller.issueList.size == 1)
-            assert(controller.issueList[0] == Issue.fromGitlabDto(discombobulateIssue.issue))
+                // Look for an issue that doesn't exist
+                val foundIssueResult = controller.fetchIssueByID(500)
+                assertTrue(foundIssueResult == IssueFetchResult.IssueNotFound)
+            }
+        }
+
+        @Test
+        fun `Fetch by ID fails with no project when project is not selected`() {
+            runBlocking {
+                prepareControllers()
+
+                // Should return that there's no project
+                val foundIssueResult = controller.fetchIssueByID(coffeeIssue.issue.idInProject)
+                assertTrue(foundIssueResult == IssueFetchResult.NoProject)
+            }
         }
     }
 
-    @Test
-    fun `Can filter by milestone`() {
-        runBlocking {
-            val credentialLoadResult = credentialController.tryAddCredentials(GitlabCredential("https://fake.gitlab", "jdoe-creds"))
-            assertTrue(credentialLoadResult)
+    @Nested
+    inner class Filtering {
+        @Test
+        fun `Can filter by issue title and number`() {
+            runBlocking {
+                prepareControllers(neatProjectData)
 
-            val projectLoadResult = controller.selectProject(Project.fromGitlabDto(neatProjectData))
-            assert(projectLoadResult == ProjectSelectResult.IssuesLoaded)
+                // Test filtering by text
+                controller.filterByIssueText("Reticulate")
+                assert(controller.issueList.size == 1)
+                assert(controller.issueList[0] == Issue.fromGitlabDto(reticulateSplinesIssue.issue))
 
-            // Filter: issues with any milestone
-            controller.selectMilestoneFilterOption(MilestoneFilterOption.HasAssignedMilestone)
-            assert(controller.issueList.size == 2)
-            assert(controller.issueList[0] == Issue.fromGitlabDto(discombobulateIssue.issue))
-            assert(controller.issueList[1] == Issue.fromGitlabDto(whiteWalkerIssue.issue))
-
-            // Filter: issues with no milestone
-            controller.selectMilestoneFilterOption(MilestoneFilterOption.HasNoMilestone)
-            assert(controller.issueList.size == 1)
-            assert(controller.issueList[0] == Issue.fromGitlabDto(reticulateSplinesIssue.issue))
-
-            // Filter: issues with specific milestone
-            val milestone = Milestone.fromGitlabDto(weekTwoMilestone)
-            controller.selectMilestoneFilterOption(MilestoneFilterOption.SelectedMilestone(milestone))
-            assert(controller.issueList.size == 1)
-            assert(controller.issueList[0] == Issue.fromGitlabDto(discombobulateIssue.issue))
+                // Test filtering by number
+                controller.filterByIssueText("#2")
+                assert(controller.issueList.size == 1)
+                assert(controller.issueList[0] == Issue.fromGitlabDto(discombobulateIssue.issue))
+            }
         }
-    }
 
-    @Test
-    fun `Filter is retained on refresh`() {
-        runBlocking {
-            val credentialLoadResult = credentialController.tryAddCredentials(GitlabCredential("https://fake.gitlab", "jdoe-creds"))
-            assertTrue(credentialLoadResult)
+        @Test
+        fun `Can filter by milestone`() {
+            runBlocking {
+                prepareControllers(neatProjectData)
 
-            val selectProjectResult = controller.selectProject(Project.fromGitlabDto(neatProjectData))
-            assert(selectProjectResult == ProjectSelectResult.IssuesLoaded)
+                // Filter: issues with any milestone
+                controller.selectMilestoneFilterOption(MilestoneFilterOption.HasAssignedMilestone)
+                assert(controller.issueList.size == 2)
+                assert(controller.issueList[0] == Issue.fromGitlabDto(discombobulateIssue.issue))
+                assert(controller.issueList[1] == Issue.fromGitlabDto(whiteWalkerIssue.issue))
 
-            // Apply filter
-            controller.filterByIssueText("Reticulate")
-            assert(controller.issueList.size == 1)
-            assert(controller.issueList[0] == Issue.fromGitlabDto(reticulateSplinesIssue.issue))
+                // Filter: issues with no milestone
+                controller.selectMilestoneFilterOption(MilestoneFilterOption.HasNoMilestone)
+                assert(controller.issueList.size == 1)
+                assert(controller.issueList[0] == Issue.fromGitlabDto(reticulateSplinesIssue.issue))
 
-            // Refresh, the issues should remain the same
-            val refreshResult = controller.refreshIssues()
-            assert(refreshResult == IssueRefreshResult.RefreshSuccess)
-            assert(controller.issueList.size == 1)
-            assert(controller.issueList[0] == Issue.fromGitlabDto(reticulateSplinesIssue.issue))
+                // Filter: issues with specific milestone
+                val milestone = Milestone.fromGitlabDto(weekTwoMilestone)
+                controller.selectMilestoneFilterOption(MilestoneFilterOption.SelectedMilestone(milestone))
+                assert(controller.issueList.size == 1)
+                assert(controller.issueList[0] == Issue.fromGitlabDto(discombobulateIssue.issue))
+            }
+        }
+
+        @Test
+        fun `Filter is retained on refresh`() {
+            runBlocking {
+                prepareControllers(neatProjectData)
+
+                // Apply filter
+                controller.filterByIssueText("Reticulate")
+                assert(controller.issueList.size == 1)
+                assert(controller.issueList[0] == Issue.fromGitlabDto(reticulateSplinesIssue.issue))
+
+                // Refresh, the issues should remain the same
+                val refreshResult = controller.refreshIssues()
+                assert(refreshResult == IssueRefreshResult.RefreshSuccess)
+                assert(controller.issueList.size == 1)
+                assert(controller.issueList[0] == Issue.fromGitlabDto(reticulateSplinesIssue.issue))
+            }
         }
     }
 
     @Test
     fun `Refresh fails without selected project`() {
         runBlocking {
-            val credentialLoadResult = credentialController.tryAddCredentials(GitlabCredential("https://fake.gitlab", "jdoe-creds"))
-            assertTrue(credentialLoadResult)
+            prepareControllers()
 
             val issueRefreshResult = controller.refreshIssues()
             assert(issueRefreshResult == IssueRefreshResult.NoProject)
         }
     }
 
-    @Test
-    fun `Time is recorded correctly`() {
-        runBlocking {
-            val credentialLoadResult = credentialController.tryAddCredentials(GitlabCredential("https://fake.gitlab", "jdoe-creds"))
-            assertTrue(credentialLoadResult)
+    @Nested
+    inner class `Time recording` {
+        @Test
+        fun `Time is recorded correctly`() {
+            runBlocking {
+                prepareControllers()
 
-            // Test - recording time with existing spend
-            val timeRecordResult = controller.recordTime(IssueWithTime(
-                issue = Issue.fromGitlabDto(reticulateSplinesIssue.issue),
-                elapsedTime = TimeSpend(10),
-            ))
-            assert(timeRecordResult == TimeRecordResult.TimeRecorded)
-            assert(gitlabState.fetchIssue(neatProjectData.id, reticulateSplinesIssue.issue.idInProject)?.timeSpend?.timeSpent == "2h 13m")
-
-            // Test - recording time with no spend
-            val noSpendRecordResult = controller.recordTime(IssueWithTime(
-                issue = Issue.fromGitlabDto(discombobulateIssue.issue),
-                elapsedTime = TimeSpend(10),
-            ))
-            assert(noSpendRecordResult == TimeRecordResult.TimeRecorded)
-            assert(gitlabState.fetchIssue(neatProjectData.id, discombobulateIssue.issue.idInProject)?.timeSpend?.timeSpent == "10m")
-        }
-    }
-
-    @Test
-    fun `Time does not record if time spent is less than 1m`() {
-        runBlocking {
-            val credentialLoadResult = credentialController.tryAddCredentials(GitlabCredential("https://fake.gitlab", "jdoe-creds"))
-            assertTrue(credentialLoadResult)
-
-            val issueRecordResult = controller.recordTime(IssueWithTime(
-                issue = Issue.fromGitlabDto(reticulateSplinesIssue.issue),
-                elapsedTime = TimeSpend(0),
-            ))
-            assert(issueRecordResult == TimeRecordResult.NegligibleTime)
-            assert(reticulateSplinesIssue.issue.timeSpend == gitlabState.fetchIssue(neatProjectData.id, reticulateSplinesIssue.issue.idInProject)?.timeSpend)
-        }
-    }
-
-    @Test
-    fun `Time does not record if credentials are missing`() {
-        runBlocking {
-            val issueRecordResult = controller.recordTime(IssueWithTime(
-                issue = Issue.fromGitlabDto(reticulateSplinesIssue.issue),
-                elapsedTime = TimeSpend(10),
-            ))
-            assert(issueRecordResult == TimeRecordResult.NoCredentials)
-        }
-    }
-
-    @Test
-    fun `Time recording returns failed result if gitlab connection fails`() {
-        runBlocking {
-            // Configure time recording endpoint to throw a connectivity error
-            gitlabState.triggerHttpErrorOnCall(MethodIdentifier.ADD_TIME_SPENT_TO_ISSUE, HttpErrors.ConnectivityError("Couldn't connect to Gitlab"))
-
-            val credentialLoadResult = credentialController.tryAddCredentials(GitlabCredential("https://fake.gitlab", "jdoe-creds"))
-            assertTrue(credentialLoadResult)
-
-            val timeRecordResult = controller.recordTime(
-                IssueWithTime(
-                issue = Issue.fromGitlabDto(reticulateSplinesIssue.issue),
+                // Test - recording time with existing spend
+                val timeRecordResult = controller.recordTime(IssueWithTime(
+                    issue = Issue.fromGitlabDto(reticulateSplinesIssue.issue),
                     elapsedTime = TimeSpend(10),
-            ))
-            assert(timeRecordResult == TimeRecordResult.TimeFailedToRecord)
+                ))
+                assert(timeRecordResult == TimeRecordResult.TimeRecorded)
+                assert(gitlabState.fetchIssue(neatProjectData.id, reticulateSplinesIssue.issue.idInProject)?.timeSpend?.timeSpent == "2h 13m")
+
+                // Test - recording time with no spend
+                val noSpendRecordResult = controller.recordTime(IssueWithTime(
+                    issue = Issue.fromGitlabDto(discombobulateIssue.issue),
+                    elapsedTime = TimeSpend(10),
+                ))
+                assert(noSpendRecordResult == TimeRecordResult.TimeRecorded)
+                assert(gitlabState.fetchIssue(neatProjectData.id, discombobulateIssue.issue.idInProject)?.timeSpend?.timeSpent == "10m")
+            }
+        }
+
+        @Test
+        fun `Time does not record if time spent is less than 1m`() {
+            runBlocking {
+                prepareControllers()
+
+                val issueRecordResult = controller.recordTime(IssueWithTime(
+                    issue = Issue.fromGitlabDto(reticulateSplinesIssue.issue),
+                    elapsedTime = TimeSpend(0),
+                ))
+                assert(issueRecordResult == TimeRecordResult.NegligibleTime)
+                assert(reticulateSplinesIssue.issue.timeSpend == gitlabState.fetchIssue(neatProjectData.id, reticulateSplinesIssue.issue.idInProject)?.timeSpend)
+            }
+        }
+
+        @Test
+        fun `Time does not record if credentials are missing`() {
+            runBlocking {
+                val issueRecordResult = controller.recordTime(IssueWithTime(
+                    issue = Issue.fromGitlabDto(reticulateSplinesIssue.issue),
+                    elapsedTime = TimeSpend(10),
+                ))
+                assert(issueRecordResult == TimeRecordResult.NoCredentials)
+            }
+        }
+
+        @Test
+        fun `Time recording returns failed result if gitlab connection fails`() {
+            runBlocking {
+                // Configure time recording endpoint to throw a connectivity error
+                gitlabState.triggerHttpErrorOnCall(MethodIdentifier.ADD_TIME_SPENT_TO_ISSUE, HttpErrors.ConnectivityError("Couldn't connect to Gitlab"))
+
+                prepareControllers()
+
+                val timeRecordResult = controller.recordTime(
+                    IssueWithTime(
+                        issue = Issue.fromGitlabDto(reticulateSplinesIssue.issue),
+                        elapsedTime = TimeSpend(10),
+                    ))
+                assert(timeRecordResult == TimeRecordResult.TimeFailedToRecord)
+            }
+        }
+    }
+
+    /**
+     * Loads working credentials to the credential controller and optionally selects the specified project on the issue
+     * controller, verifying both work properly
+     */
+    private suspend fun prepareControllers(project: GitlabProject? = null) {
+        val credentialLoadResult = credentialController.tryAddCredentials(GitlabCredential("https://fake.gitlab", "jdoe-creds"))
+        assertTrue(credentialLoadResult)
+
+        if (project != null) {
+            val selectResult = controller.selectProject(Project.fromGitlabDto(project))
+            assertTrue(selectResult == ProjectSelectResult.IssuesLoaded)
         }
     }
 }
