@@ -40,6 +40,7 @@ class IssueLookupView : SuspendingView() {
         issueFragment.root.hgrow = Priority.ALWAYS
         issueController.selectedProject.onChange {
             foundIssue.set(null)
+            statusMessage.set("")
         }
 
         registerBackgroundTaskInit {

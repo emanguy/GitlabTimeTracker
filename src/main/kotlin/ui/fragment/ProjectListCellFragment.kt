@@ -4,8 +4,8 @@ import edu.erittenhouse.gitlabtimetracker.model.Project
 import edu.erittenhouse.gitlabtimetracker.ui.style.Images
 import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles
 import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
+import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.flexspacer
 import javafx.beans.property.SimpleStringProperty
-import javafx.scene.layout.Priority
 import tornadofx.*
 
 class ProjectListCellFragment : ListCellFragment<Project>() {
@@ -55,9 +55,7 @@ class ProjectListCellFragment : ListCellFragment<Project>() {
             text(projectGitlabPath) {
                 addClass(TypographyStyles.metadata)
             }
-            region {
-                hgrow = Priority.ALWAYS
-            }
+            flexspacer()
             button {
                 tooltip("Go to project")
                 imageview(Images.newWindow)
