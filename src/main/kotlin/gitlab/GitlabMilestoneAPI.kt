@@ -34,6 +34,7 @@ class GitlabMilestoneAPI(private val client: HttpClient) : IGitlabMilestoneAPI {
                     url {
                         parameters["page"] = currentPage.toString()
                         parameters["state"] = "active"
+                        parameters["include_parent_milestones"] = "true"
                     }
                 }
 
