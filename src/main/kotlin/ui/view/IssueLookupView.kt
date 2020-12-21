@@ -4,6 +4,7 @@ import edu.erittenhouse.gitlabtimetracker.controller.IssueController
 import edu.erittenhouse.gitlabtimetracker.controller.result.IssueFetchResult
 import edu.erittenhouse.gitlabtimetracker.model.Issue
 import edu.erittenhouse.gitlabtimetracker.ui.fragment.IssueListCellFragment
+import edu.erittenhouse.gitlabtimetracker.ui.style.Images
 import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles
 import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
 import edu.erittenhouse.gitlabtimetracker.ui.util.Debouncer
@@ -39,6 +40,7 @@ class IssueLookupView : SuspendingView() {
         issueFragment.root.hgrow = Priority.ALWAYS
         issueController.selectedProject.onChange {
             foundIssue.set(null)
+            statusMessage.set("")
         }
 
         registerBackgroundTaskInit {
@@ -57,7 +59,7 @@ class IssueLookupView : SuspendingView() {
         }
         form {
             fieldset {
-                field("Issue number") {
+                field("Issue number: ") {
                     textfield {
                         promptText = "1234"
                         issueNumText.bindBidirectional(textProperty())
@@ -69,6 +71,7 @@ class IssueLookupView : SuspendingView() {
                     }
                     button("Find issue") {
                         enableWhen(issueCanBeFetched)
+                        imageview(Images.searchIssues)
                         suspendingAction {
                             fetchIssue()
                         }
@@ -117,7 +120,7 @@ class IssueLookupView : SuspendingView() {
                     return
                 }
                 is IssueFetchResult.IssueFound -> {
-                    statusMessage.set("")
+                    statusMessage.set("Here's what we found:")
                     issueFetchResult.issue
                 }
             }

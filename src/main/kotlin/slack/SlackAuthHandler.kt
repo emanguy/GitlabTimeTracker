@@ -5,6 +5,7 @@ import com.slack.api.methods.SlackApiException
 import edu.erittenhouse.gitlabtimetracker.model.SlackCredential
 import edu.erittenhouse.gitlabtimetracker.slack.result.LoginResult
 import edu.erittenhouse.gitlabtimetracker.slack.result.ServerInitResult
+import edu.erittenhouse.gitlabtimetracker.ui.style.Images
 import io.ktor.application.*
 import io.ktor.html.*
 import io.ktor.http.content.*
@@ -112,7 +113,7 @@ class SlackAuthHandler : ISlackAuthHandler {
 
     private fun Route.registerStaticContent() {
         static("res") {
-            resource("GTTLogo.png")
+            resource(Images.timeTrackerLogo)
         }
     }
 

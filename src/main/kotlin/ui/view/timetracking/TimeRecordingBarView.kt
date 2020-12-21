@@ -5,6 +5,7 @@ import edu.erittenhouse.gitlabtimetracker.controller.TimeRecordingController
 import edu.erittenhouse.gitlabtimetracker.controller.event.TimeRecordingState
 import edu.erittenhouse.gitlabtimetracker.controller.result.RecordingStopResult
 import edu.erittenhouse.gitlabtimetracker.controller.result.TimeRecordResult
+import edu.erittenhouse.gitlabtimetracker.ui.style.Images
 import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles
 import edu.erittenhouse.gitlabtimetracker.ui.util.Debouncer
 import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.showErrorModal
@@ -32,6 +33,8 @@ class TimeRecordingBarView : SuspendingView() {
 
             stopButton = button("Select issue") {
                 isDisable = true
+                imageview(Images.stopAndSubmit)
+
                 suspendingAction {
                     val recordResult = timeRecordingController.stopTiming()
                     val timeSubmitResult = when (recordResult) {

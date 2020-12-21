@@ -3,6 +3,7 @@ package edu.erittenhouse.gitlabtimetracker.ui.view.timetracking
 import edu.erittenhouse.gitlabtimetracker.controller.IssueController
 import edu.erittenhouse.gitlabtimetracker.controller.result.IssueRefreshResult
 import edu.erittenhouse.gitlabtimetracker.model.filter.MilestoneFilterOption
+import edu.erittenhouse.gitlabtimetracker.ui.style.Images
 import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles
 import edu.erittenhouse.gitlabtimetracker.ui.util.Debouncer
 import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.flexspacer
@@ -97,6 +98,7 @@ class FilterBarView : SuspendingView() {
 
             button("Track other issue") {
                 maxWidth = Double.MAX_VALUE
+                imageview(Images.searchIssues)
 
                 action {
                     issueFindDebouncer.runDebounced {
@@ -116,6 +118,7 @@ class FilterBarView : SuspendingView() {
             }
             button("Refresh issues") {
                 maxWidth = Double.MAX_VALUE
+                imageview(Images.refreshIssues)
 
                 suspendingAction {
                     this@button.text = "Loading..."

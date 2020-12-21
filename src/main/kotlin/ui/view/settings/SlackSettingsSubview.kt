@@ -4,6 +4,7 @@ import edu.erittenhouse.gitlabtimetracker.controller.SlackController
 import edu.erittenhouse.gitlabtimetracker.controller.result.SlackLoginResult
 import edu.erittenhouse.gitlabtimetracker.model.SlackCredential
 import edu.erittenhouse.gitlabtimetracker.ui.style.FormStyles
+import edu.erittenhouse.gitlabtimetracker.ui.style.Images
 import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
 import edu.erittenhouse.gitlabtimetracker.ui.util.Debouncer
 import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.flexspacer
@@ -102,6 +103,7 @@ class SlackSettingsSubview : SuspendingView() {
                 hbox {
                     flexspacer()
                     button(slackLoginText) {
+                        imageview(Images.newWindow)
                         suspendingAction {
                             doSlackLogin()
                         }

@@ -1,6 +1,7 @@
 package edu.erittenhouse.gitlabtimetracker.ui.fragment
 
 import edu.erittenhouse.gitlabtimetracker.model.User
+import edu.erittenhouse.gitlabtimetracker.ui.style.Images
 import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles
 import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
 import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.flexspacer
@@ -14,7 +15,7 @@ import tornadofx.*
 class UserDisplayFragment : ItemFragment<User>() {
     private val usersNameProperty = SimpleStringProperty("")
     private val usersUsernameProperty = SimpleStringProperty("")
-    private val usersPhotoURLProperty = SimpleStringProperty("/LoadingPlaceholder.jpg")
+    private val usersPhotoURLProperty = SimpleStringProperty(Images.loadingPlaceholder)
 
     private val mutableSettingsTriggerFlow = MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_LATEST)
     val settingsTriggerFlow = mutableSettingsTriggerFlow.asSharedFlow()
@@ -30,7 +31,7 @@ class UserDisplayFragment : ItemFragment<User>() {
     }
 
     override val root = hbox {
-        addClass(LayoutStyles.typicalPaddingAndSpacing)
+        addClass(LayoutStyles.typicalPaddingAndSpacing, LayoutStyles.centerAlignLeft)
         imageview(usersPhotoURLProperty) {
             clip = Circle(20.0, 20.0, 20.0)
             fitWidth = 40.0
@@ -49,6 +50,7 @@ class UserDisplayFragment : ItemFragment<User>() {
         flexspacer()
 
         button("Settings") {
+            imageview(Images.settings)
             action {
                 mutableSettingsTriggerFlow.tryEmit(Unit)
             }

@@ -1,10 +1,11 @@
 package edu.erittenhouse.gitlabtimetracker.ui.fragment
 
 import edu.erittenhouse.gitlabtimetracker.model.Project
+import edu.erittenhouse.gitlabtimetracker.ui.style.Images
 import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles
 import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
+import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.flexspacer
 import javafx.beans.property.SimpleStringProperty
-import javafx.scene.layout.Priority
 import tornadofx.*
 
 class ProjectListCellFragment : ListCellFragment<Project>() {
@@ -47,16 +48,17 @@ class ProjectListCellFragment : ListCellFragment<Project>() {
             }
         }
         hbox {
+            addClass(LayoutStyles.centerAlignLeft)
             style {
                 prefWidth = 100.percent
             }
             text(projectGitlabPath) {
                 addClass(TypographyStyles.metadata)
             }
-            region {
-                hgrow = Priority.ALWAYS
-            }
-            hyperlink("Go to project") {
+            flexspacer()
+            button {
+                tooltip("Go to project")
+                imageview(Images.newWindow)
                 action {
                     hostServices.showDocument(projectUrl)
                 }
