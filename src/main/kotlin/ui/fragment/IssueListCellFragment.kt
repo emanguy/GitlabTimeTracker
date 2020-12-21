@@ -66,20 +66,23 @@ class IssueListCellFragment : SuspendingListCellFragment<Issue>() {
     private val issueController by inject<IssueController>()
     private val timeRecordingController by inject<TimeRecordingController>()
 
-    private val buttonText = stringBinding(itemProperty, timeRecordingController.recordingIssueProperty) {
+    private val isTimingProperty = booleanBinding(itemProperty, timeRecordingController.recordingIssueProperty) {
         val currentIssue = value
         val currentlyRecordingIssue = timeRecordingController.recordingIssueProperty.value
 
-        return@stringBinding if (currentIssue != null && currentIssue.idInProject == currentlyRecordingIssue?.idInProject) {
-            "Stop"
-        } else {
-            "Start"
-        }
+        return@booleanBinding currentIssue != null && currentIssue.idInProject == currentlyRecordingIssue?.idInProject
     }
+    private val buttonIcon = isTimingProperty.stringBinding { isTiming -> if (isTiming == true) "/StopAndSubmit.png" else "/Play.png" }
+    private val buttonTooltip = isTimingProperty.stringBinding { isTiming -> if (isTiming == true) "Stop recording time and submit" else "Start recording time"}
 
     override val root = hbox {
         addClass(LayoutStyles.typicalPaddingAndSpacing)
-        button(buttonText) {
+        button {
+            imageview(buttonIcon) {
+            }
+            tooltip {
+                this.textProperty().bind(buttonTooltip)
+            }
             suspendingAction {
                 val issueSnapshot = item
                 val timeRecordingState = timeRecordingController.recordingIssueState.value

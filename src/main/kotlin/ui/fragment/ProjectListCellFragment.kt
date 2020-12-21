@@ -47,6 +47,7 @@ class ProjectListCellFragment : ListCellFragment<Project>() {
             }
         }
         hbox {
+            addClass(LayoutStyles.centerAlignLeft)
             style {
                 prefWidth = 100.percent
             }
@@ -56,7 +57,12 @@ class ProjectListCellFragment : ListCellFragment<Project>() {
             region {
                 hgrow = Priority.ALWAYS
             }
-            hyperlink("Go to project") {
+            button {
+                tooltip("Go to project")
+                imageview("/NewWindow.png") {
+                    fitWidth = 16.0
+                    fitHeight = 16.0
+                }
                 action {
                     hostServices.showDocument(projectUrl)
                 }

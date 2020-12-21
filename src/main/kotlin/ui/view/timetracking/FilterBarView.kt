@@ -97,6 +97,10 @@ class FilterBarView : SuspendingView() {
 
             button("Track other issue") {
                 maxWidth = Double.MAX_VALUE
+                imageview("/SearchIssues.png") {
+                    fitHeight = 16.0
+                    fitWidth = 16.0
+                }
 
                 action {
                     issueFindDebouncer.runDebounced {
@@ -116,6 +120,10 @@ class FilterBarView : SuspendingView() {
             }
             button("Refresh issues") {
                 maxWidth = Double.MAX_VALUE
+                imageview("/RefreshIssues.png") {
+                    fitHeight = 16.0
+                    fitWidth = 16.0
+                }
 
                 suspendingAction {
                     this@button.text = "Loading..."

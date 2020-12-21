@@ -60,7 +60,11 @@ class LoginView : SuspendingView("Gitlab Time Tracker - Login") {
         label("Gitlab Personal API Token:")
         val apiTokenField = textfield()
 
-        button("Let's Go!") {
+        button("Log in") {
+            imageview("/LogIn.png") {
+                fitWidth = 16.0
+                fitHeight = 16.0
+            }
             suspendingAction {
                 attemptLogin(urlField.text, apiTokenField.text)
             }

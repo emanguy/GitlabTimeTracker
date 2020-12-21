@@ -32,6 +32,9 @@ class TimeRecordingBarView : SuspendingView() {
 
             stopButton = button("Select issue") {
                 isDisable = true
+                imageview("/StopAndSubmit.png") {
+                }
+
                 suspendingAction {
                     val recordResult = timeRecordingController.stopTiming()
                     val timeSubmitResult = when (recordResult) {

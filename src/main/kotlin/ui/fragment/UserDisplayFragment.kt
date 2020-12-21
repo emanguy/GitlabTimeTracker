@@ -30,7 +30,7 @@ class UserDisplayFragment : ItemFragment<User>() {
     }
 
     override val root = hbox {
-        addClass(LayoutStyles.typicalPaddingAndSpacing)
+        addClass(LayoutStyles.typicalPaddingAndSpacing, LayoutStyles.centerAlignLeft)
         imageview(usersPhotoURLProperty) {
             clip = Circle(20.0, 20.0, 20.0)
             fitWidth = 40.0
@@ -49,6 +49,10 @@ class UserDisplayFragment : ItemFragment<User>() {
         flexspacer()
 
         button("Settings") {
+            imageview("/Settings.png") {
+                fitWidth = 16.0
+                fitHeight = 16.0
+            }
             action {
                 mutableSettingsTriggerFlow.tryEmit(Unit)
             }

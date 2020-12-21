@@ -57,7 +57,7 @@ class IssueLookupView : SuspendingView() {
         }
         form {
             fieldset {
-                field("Issue number") {
+                field("Issue number: ") {
                     textfield {
                         promptText = "1234"
                         issueNumText.bindBidirectional(textProperty())
