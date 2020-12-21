@@ -38,11 +38,7 @@ interface IGitlabIssueAPI {
      *
      * @return The issue in the project with the given ID or null if it wasn't found
      */
-    suspend fun getIssueInProjectByID(
-        credentials: GitlabCredential,
-        projectID: Int,
-        issueIDInProject: Int
-    ): GitlabIssue?
+    suspend fun getIssueInProjectByID(credentials: GitlabCredential, projectID: Int, issueIDInProject: Int): GitlabIssue?
 
     /**
      * Add an amount of time spend to an issue. Format should be that of model.TimeSpend.toString().

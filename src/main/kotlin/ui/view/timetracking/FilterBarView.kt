@@ -50,8 +50,10 @@ class FilterBarView : SuspendingView() {
     }
 
     override val root = hbox {
+        addClass(LayoutStyles.typicalPaddingAndSpacing)
+
         form {
-            addClass(LayoutStyles.typicalPaddingAndSpacing)
+            addClass(LayoutStyles.noPadding, LayoutStyles.typicalSpacing)
 
             text("Filter issues: ")
             fieldset {
@@ -91,9 +93,11 @@ class FilterBarView : SuspendingView() {
         flexspacer()
 
         vbox {
-            addClass(LayoutStyles.typicalPaddingAndSpacing, LayoutStyles.bottomAlignRight)
+            addClass(LayoutStyles.typicalSpacing, LayoutStyles.bottomAlignRight)
 
             button("Track other issue") {
+                maxWidth = Double.MAX_VALUE
+
                 action {
                     issueFindDebouncer.runDebounced {
                         val findStageCopy = issueFindStage
@@ -111,6 +115,8 @@ class FilterBarView : SuspendingView() {
                 }
             }
             button("Refresh issues") {
+                maxWidth = Double.MAX_VALUE
+
                 suspendingAction {
                     this@button.text = "Loading..."
                     val refreshResult = try {
