@@ -1,9 +1,6 @@
 package edu.erittenhouse.gitlabtimetracker.controller
 
-import edu.erittenhouse.gitlabtimetracker.controller.result.IssueRefreshResult
-import edu.erittenhouse.gitlabtimetracker.controller.result.ProjectSelectResult
-import edu.erittenhouse.gitlabtimetracker.controller.result.TimeRecordResult
-import edu.erittenhouse.gitlabtimetracker.controller.result.UserLoadResult
+import edu.erittenhouse.gitlabtimetracker.controller.result.*
 import edu.erittenhouse.gitlabtimetracker.gitlab.GitlabAPI
 import edu.erittenhouse.gitlabtimetracker.io.error.HttpErrors
 import edu.erittenhouse.gitlabtimetracker.model.Issue
@@ -20,8 +17,7 @@ import kotlinx.coroutines.javafx.JavaFx
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import tornadofx.Controller
-import tornadofx.asObservable
+import tornadofx.*
 
 class IssueController : Controller() {
     private val gitlabAPI by inject<GitlabAPI>()
@@ -30,7 +26,7 @@ class IssueController : Controller() {
     private val initialFilterOptions = listOf(MilestoneFilterOption.NoMilestoneOptionSelected, MilestoneFilterOption.HasAssignedMilestone, MilestoneFilterOption.HasNoMilestone)
     private var unfilteredIssueList = listOf<Issue>()
     private val unfilteredIssueListMutex = Mutex()
-    val selectedProject = SimpleObjectProperty<Project>()
+    val selectedProject = SimpleObjectProperty<Project?>(null)
     val issueList = mutableListOf<Issue>().asObservable()
     val milestoneFilterOptions = initialFilterOptions.toMutableList().asObservable()
     @Suppress("RemoveExplicitTypeArguments")
@@ -95,6 +91,18 @@ class IssueController : Controller() {
         }
 
         return IssueRefreshResult.RefreshSuccess
+    }
+
+    /**
+     * Finds the issue in the selected project that has the given [ID in the project][issueIDInProject].
+     */
+    suspend fun fetchIssueByID(issueIDInProject: Int): IssueFetchResult {
+        val credentials = credentialController.credentials ?: return IssueFetchResult.NoCredentials
+        val project = selectedProject.get() ?: return IssueFetchResult.NoProject
+
+        val issue = gitlabAPI.issue.getIssueInProjectByID(credentials, project.id, issueIDInProject)
+
+        return if (issue == null) IssueFetchResult.IssueNotFound else IssueFetchResult.IssueFound(Issue.fromGitlabDto(issue))
     }
 
     /**

@@ -6,6 +6,7 @@ import edu.erittenhouse.gitlabtimetracker.model.GitlabCredential
 import edu.erittenhouse.gitlabtimetracker.model.addGitlabCredentials
 import edu.erittenhouse.gitlabtimetracker.model.filter.MilestoneFilterOption
 import io.ktor.client.*
+import io.ktor.client.call.receive
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -27,6 +28,17 @@ interface IGitlabIssueAPI {
         projectID: Int,
         milestoneFilter: MilestoneFilterOption = MilestoneFilterOption.NoMilestoneOptionSelected
     ): List<GitlabIssue>
+
+    /**
+     * Retrieves an issue in a project with a specified ID.
+     *
+     * @param credentials The authentication credentials to use for the gitlab API
+     * @param projectID The ID of the project to find the issue in
+     * @param issueIDInProject The ID of the issue in the project (as opposed to the global issue ID)
+     *
+     * @return The issue in the project with the given ID or null if it wasn't found
+     */
+    suspend fun getIssueInProjectByID(credentials: GitlabCredential, projectID: Int, issueIDInProject: Int): GitlabIssue?
 
     /**
      * Add an amount of time spend to an issue. Format should be that of model.TimeSpend.toString().
@@ -81,6 +93,24 @@ class GitlabIssueAPI(private val client: HttpClient) : IGitlabIssueAPI {
             }
 
             return@catchingErrors issues
+        }
+    }
+
+    override suspend fun getIssueInProjectByID(
+        credentials: GitlabCredential,
+        projectID: Int,
+        issueIDInProject: Int
+    ): GitlabIssue? = withContext(Dispatchers.Default) {
+        return@withContext catchingErrors {
+            val response = client.get<HttpStatement>(credentials.instancePath("/api/v4/projects/$projectID/issues/$issueIDInProject")) {
+                addGitlabCredentials(credentials)
+            }.execute()
+
+            return@catchingErrors if (response.status == HttpStatusCode.NotFound) {
+                null
+            } else {
+                response.receive<GitlabIssue>()
+            }
         }
     }
 
