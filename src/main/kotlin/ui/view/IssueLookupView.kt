@@ -30,6 +30,9 @@ class IssueLookupView : SuspendingView() {
     private val issueCanBeFetched = issueNumText.booleanBinding(issueController.selectedProject) {
         issueController.selectedProject.get() != null && numberRegex.matches(it ?: "")
     }
+    private val issueFindTitleBinding = issueController.selectedProject.stringBinding { project ->
+        if (project != null) "Find issue to track in ${project.name}" else "Find issue to track"
+    }
 
     init {
         issueFragment.itemProperty.bind(foundIssue)
@@ -49,7 +52,7 @@ class IssueLookupView : SuspendingView() {
     override val root = vbox {
         addClass(LayoutStyles.typicalPaddingAndSpacing)
 
-        text("Find issue to track") {
+        text(issueFindTitleBinding) {
             addClass(TypographyStyles.title)
         }
         form {
@@ -110,7 +113,7 @@ class IssueLookupView : SuspendingView() {
                     return
                 }
                 is IssueFetchResult.IssueNotFound -> {
-                    statusMessage.set("We couldn't find that issue. Please try again.")
+                    statusMessage.set("We couldn't find that issue. Please try a different issue number.")
                     return
                 }
                 is IssueFetchResult.IssueFound -> {

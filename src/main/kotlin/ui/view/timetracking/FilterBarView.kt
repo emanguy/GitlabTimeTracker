@@ -50,10 +50,6 @@ class FilterBarView : SuspendingView() {
     }
 
     override val root = hbox {
-        style {
-            backgroundColor = multi(c(0.9, 0.9, 0.9))
-        }
-
         form {
             addClass(LayoutStyles.typicalPaddingAndSpacing)
 
