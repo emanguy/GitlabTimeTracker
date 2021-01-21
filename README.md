@@ -1,4 +1,4 @@
-# Gitlab Time Tracker
+# Gitlab Time Tracker [![CircleCI](https://circleci.com/gh/emanguy/GitlabTimeTracker.svg?style=svg)](https://circleci.com/gh/emanguy/GitlabTimeTracker)
 
 ![Main Page](TimeTracker.png)
 
