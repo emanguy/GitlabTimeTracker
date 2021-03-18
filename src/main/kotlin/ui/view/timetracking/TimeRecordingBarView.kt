@@ -27,6 +27,11 @@ class TimeRecordingBarView : SuspendingView() {
     private val issueController by inject<IssueController>()
     private val ioErrorDebouncer = Debouncer()
 
+    init {
+        registerCoroutineExceptionHandler { _, exception ->
+            ioErrorDebouncer.runDebounced { showErrorModalForIOErrors(exception) }
+        }
+    }
     override val root = hbox {
             addClass(LayoutStyles.typicalPaddingAndSpacing)
             alignment = Pos.CENTER
@@ -70,11 +75,6 @@ class TimeRecordingBarView : SuspendingView() {
                 }
             }
         }
-    }
-
-    override fun onUncaughtCoroutineException(context: CoroutineContext, exception: Throwable) {
-        super.onUncaughtCoroutineException(context, exception)
-        ioErrorDebouncer.runDebounced { showErrorModalForIOErrors(exception) }
     }
 
     private fun handleRecordingIssueUpdate(recordingState: TimeRecordingState) {

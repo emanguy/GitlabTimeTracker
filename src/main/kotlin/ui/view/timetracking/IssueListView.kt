@@ -13,6 +13,12 @@ class IssueListView : SuspendingView() {
     private val issueController by inject<IssueController>()
     private val ioErrorDebouncer = Debouncer()
 
+    init {
+        registerCoroutineExceptionHandler { _, exception ->
+            ioErrorDebouncer.runDebounced { showErrorModalForIOErrors(exception) }
+        }
+    }
+
     override val root = vbox {
         style {
             maxWidth = 1000.px
@@ -30,10 +36,5 @@ class IssueListView : SuspendingView() {
                 vgrow = Priority.ALWAYS
             }
         }
-    }
-
-    override fun onUncaughtCoroutineException(context: CoroutineContext, exception: Throwable) {
-        super.onUncaughtCoroutineException(context, exception)
-        ioErrorDebouncer.runDebounced { showErrorModalForIOErrors(exception) }
     }
 }

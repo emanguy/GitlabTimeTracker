@@ -18,6 +18,12 @@ class ProjectListView : SuspendingView() {
     private val issueController by inject<IssueController>()
     private val ioErrorDebouncer = Debouncer()
 
+    init {
+        registerCoroutineExceptionHandler { _, exception ->
+            ioErrorDebouncer.runDebounced { showErrorModalForIOErrors(exception) }
+        }
+    }
+
     override val root = listview(projectController.projects) {
         vgrow = Priority.ALWAYS
         cellFragment(ProjectListCellFragment::class)
@@ -27,10 +33,5 @@ class ProjectListView : SuspendingView() {
                 is ProjectSelectResult.NoCredentials -> showErrorModal("Something's wrong, the time tracker couldn't read your credentials when pulling projects")
             }
         }
-    }
-
-    override fun onUncaughtCoroutineException(context: CoroutineContext, exception: Throwable) {
-        super.onUncaughtCoroutineException(context, exception)
-        ioErrorDebouncer.runDebounced { showErrorModalForIOErrors(exception) }
     }
 }

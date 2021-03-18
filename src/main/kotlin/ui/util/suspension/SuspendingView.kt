@@ -2,6 +2,7 @@ package edu.erittenhouse.gitlabtimetracker.ui.util.suspension
 
 import javafx.scene.Node
 import tornadofx.View
+import kotlin.coroutines.CoroutineContext
 
 abstract class SuspendingView private constructor(
     title: String?,
@@ -23,4 +24,5 @@ abstract class SuspendingView private constructor(
     }
     override fun registerBackgroundTaskInit(backgroundTaskInitFunction: () -> Unit) = scopeImpl.registerBackgroundTaskInit(backgroundTaskInitFunction)
     override fun registerBackgroundTaskCleanup(backgroundTaskCleanupFunction: () -> Unit) = scopeImpl.registerBackgroundTaskCleanup(backgroundTaskCleanupFunction)
+    override fun registerCoroutineExceptionHandler(coroutineExceptionHandleFunction: (CoroutineContext, Throwable) -> Unit) = scopeImpl.registerCoroutineExceptionHandler(coroutineExceptionHandleFunction)
 }
