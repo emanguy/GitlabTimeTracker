@@ -5,10 +5,12 @@ jobs:
       - image: emanguy/javafx-xvfb
     steps:
       - checkout
-      - run: |
-          xvfb-run ./gradlew test
-          mkdir -p test-results/JUnit
-          mv build/test-results/test/*.xml test-results/JUnit/
+      - run:
+          name: Run unit tests
+          command: |
+            xvfb-run ./gradlew test
+            mkdir -p test-results/JUnit
+            mv build/test-results/test/*.xml test-results/JUnit/
       - store_test_results:
           path: test-results
 
