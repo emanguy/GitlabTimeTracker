@@ -49,6 +49,10 @@ class IssueLookupView : SuspendingView() {
             statusMessage.set("")
             foundIssue.set(null)
         }
+
+        registerCoroutineExceptionHandler { _, exception ->
+            ioErrorDebouncer.runDebounced { showErrorModalForIOErrors(exception) }
+        }
     }
 
     override val root = vbox {
@@ -126,10 +130,5 @@ class IssueLookupView : SuspendingView() {
             }
 
         foundIssue.set(retrievedIssue)
-    }
-
-    override fun onUncaughtCoroutineException(context: CoroutineContext, exception: Throwable) {
-        super.onUncaughtCoroutineException(context, exception)
-        ioErrorDebouncer.runDebounced { showErrorModalForIOErrors(exception) }
     }
 }

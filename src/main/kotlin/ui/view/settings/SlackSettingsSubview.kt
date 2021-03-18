@@ -95,6 +95,10 @@ class SlackSettingsSubview : SuspendingView() {
                     }
             }
         }
+
+        registerCoroutineExceptionHandler { _, exception ->
+            errorMessageDebouncer.runDebounced { showErrorModalForIOErrors(exception) }
+        }
     }
 
     override val root = vbox {
@@ -162,11 +166,6 @@ class SlackSettingsSubview : SuspendingView() {
                 }
             }
         }
-    }
-
-    override fun onUncaughtCoroutineException(context: CoroutineContext, exception: Throwable) {
-        super.onUncaughtCoroutineException(context, exception)
-        errorMessageDebouncer.runDebounced { showErrorModalForIOErrors(exception) }
     }
 
     private suspend fun doSlackLogin() {

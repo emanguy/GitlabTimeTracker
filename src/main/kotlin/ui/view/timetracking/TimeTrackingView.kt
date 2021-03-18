@@ -97,6 +97,10 @@ class TimeTrackingView : SuspendingView("Gitlab Time Tracker") {
                 }
             }
         }
+
+        registerCoroutineExceptionHandler { _, exception ->
+            ioErrorDebouncer.runDebounced { showErrorModalForIOErrors(exception) }
+        }
     }
 
     override val root = borderpane {
@@ -126,11 +130,6 @@ class TimeTrackingView : SuspendingView("Gitlab Time Tracker") {
         }
 
         scopeBottom(TimeRecordingBarView::class)
-    }
-
-    override fun onUncaughtCoroutineException(context: CoroutineContext, exception: Throwable) {
-        super.onUncaughtCoroutineException(context, exception)
-        ioErrorDebouncer.runDebounced { showErrorModalForIOErrors(exception) }
     }
 
     private suspend fun listenForSettingsTrigger() {

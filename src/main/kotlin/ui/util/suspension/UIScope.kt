@@ -141,6 +141,7 @@ interface UIScope : CoroutineScope {
     fun triggerViewClosing()
     fun registerBackgroundTaskInit(backgroundTaskInitFunction: () -> Unit)
     fun registerBackgroundTaskCleanup(backgroundTaskCleanupFunction: () -> Unit)
+    fun registerCoroutineExceptionHandler(coroutineExceptionHandleFunction: (CoroutineContext, Throwable) -> Unit)
     fun registerChildScope(scope: UIScope)
 
     fun onUncaughtCoroutineException(context: CoroutineContext, exception: Throwable) {
@@ -150,7 +151,7 @@ interface UIScope : CoroutineScope {
 }
 
 class UIScopeImpl : UIScope {
-    private val ceh = CoroutineExceptionHandler(::onUncaughtCoroutineException)
+    private val ceh = CoroutineExceptionHandler(this::onUncaughtCoroutineException)
     override val coroutineContext = SupervisorJob() + Dispatchers.JavaFx + ceh
     private lateinit var backingScope: Scope
     override val tornadofxScope: Scope
@@ -160,6 +161,7 @@ class UIScopeImpl : UIScope {
     private var childScopes = emptyList<UIScope>()
     private var backgroundTaskInitFunctions: List<() -> Unit> = emptyList()
     private var backgroundTaskCleanupFunctions: List<() -> Unit> = emptyList()
+    private var coroutineExceptionHandlers: List<(CoroutineContext, Throwable) -> Unit> = emptyList()
 
     fun registerComponent(component: UIComponent) {
         this.backingScope = component.scope
@@ -190,7 +192,16 @@ class UIScopeImpl : UIScope {
         backgroundTaskCleanupFunctions = backgroundTaskCleanupFunctions + backgroundTaskCleanupFunction
     }
 
+    override fun registerCoroutineExceptionHandler(coroutineExceptionHandleFunction: (CoroutineContext, Throwable) -> Unit) {
+        coroutineExceptionHandlers = coroutineExceptionHandlers + coroutineExceptionHandleFunction
+    }
+
     override fun registerChildScope(scope: UIScope) {
         childScopes = childScopes + scope
+    }
+
+    override fun onUncaughtCoroutineException(context: CoroutineContext, exception: Throwable) {
+        super.onUncaughtCoroutineException(context, exception)
+        this.coroutineExceptionHandlers.forEach { it(context, exception) }
     }
 }

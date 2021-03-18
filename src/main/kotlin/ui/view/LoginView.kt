@@ -46,6 +46,15 @@ class LoginView : SuspendingView("Gitlab Time Tracker - Login") {
                 height = 400.0
             }
         }
+        registerCoroutineExceptionHandler { _, exception ->
+            errorDebouncer.runDebounced {
+                when (exception) {
+                    is SettingsErrors.DiskIOError -> credentialIssueText.set("${exception.message} If your ${exception.problemFilepath} file still exists, please delete it.")
+                    is HttpErrors, is SettingsErrors -> showErrorModal(generateMessageForIOExceptions(exception))
+                    else -> showErrorModal("We had an issue: ${exception.message}")
+                }
+            }
+        }
     }
 
     override val root = form {
@@ -75,17 +84,6 @@ class LoginView : SuspendingView("Gitlab Time Tracker - Login") {
             visibleWhen(usePreviousCredentialsVisible)
             action {
                 replaceWith<TimeTrackingView>()
-            }
-        }
-    }
-
-    override fun onUncaughtCoroutineException(context: CoroutineContext, exception: Throwable) {
-        super.onUncaughtCoroutineException(context, exception)
-        errorDebouncer.runDebounced {
-            when (exception) {
-                is SettingsErrors.DiskIOError -> credentialIssueText.set("${exception.message} If your ${exception.problemFilepath} file still exists, please delete it.")
-                is HttpErrors, is SettingsErrors -> showErrorModal(generateMessageForIOExceptions(exception))
-                else -> showErrorModal("We had an issue: ${exception.message}")
             }
         }
     }

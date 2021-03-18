@@ -48,6 +48,10 @@ class FilterBarView : SuspendingView() {
                 }
             }
         }
+
+        registerCoroutineExceptionHandler { _, exception ->
+            ioErrorDebouncer.runDebounced { showErrorModalForIOErrors(exception) }
+        }
     }
 
     override val root = hbox {
@@ -138,10 +142,5 @@ class FilterBarView : SuspendingView() {
                 }
             }
         }
-    }
-
-    override fun onUncaughtCoroutineException(context: CoroutineContext, exception: Throwable) {
-        super.onUncaughtCoroutineException(context, exception)
-        ioErrorDebouncer.runDebounced { showErrorModalForIOErrors(exception) }
     }
 }
