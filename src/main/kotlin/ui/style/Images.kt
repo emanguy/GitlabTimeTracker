@@ -10,4 +10,5 @@ object Images {
     const val searchIssues = "/SearchIssues.png"
     const val settings = "/Settings.png"
     const val stopAndSubmit = "/StopAndSubmit.png"
+    const val submit = "/Submit.png"
 }

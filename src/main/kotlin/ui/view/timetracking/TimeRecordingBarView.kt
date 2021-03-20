@@ -5,6 +5,7 @@ import edu.erittenhouse.gitlabtimetracker.controller.TimeRecordingController
 import edu.erittenhouse.gitlabtimetracker.controller.event.TimeRecordingState
 import edu.erittenhouse.gitlabtimetracker.controller.result.RecordingStopResult
 import edu.erittenhouse.gitlabtimetracker.controller.result.TimeRecordResult
+import edu.erittenhouse.gitlabtimetracker.ui.fragment.TimeRecordEditFragment
 import edu.erittenhouse.gitlabtimetracker.ui.style.Images
 import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles
 import edu.erittenhouse.gitlabtimetracker.ui.util.Debouncer
@@ -44,7 +45,16 @@ class TimeRecordingBarView : SuspendingView() {
 
             item("Stop and edit") {
                 suspendingAction {
-                    showOKModal("Click result", "Clicked stop and edit")
+                    when (val recordingResult = timeRecordingController.stopTiming()) {
+                        is RecordingStopResult.NoIssueBeingRecorded -> {
+                            showOKModal("Nothing Recording", "Nothing to edit, nothing was being recorded")
+                        }
+                        is RecordingStopResult.RecorderUnresponsive -> {
+                            showErrorModal("Something's wrong, we couldn't stop the issue recording. " +
+                                    "Please restart the app if you have additional problems.")
+                        }
+                        is RecordingStopResult.StoppedTiming -> find<TimeRecordEditFragment>("recordedTime" to recordingResult.issueWithTime).openModal()
+                    }
                 }
             }
             item("Cancel recording") {

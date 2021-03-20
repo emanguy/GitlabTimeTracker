@@ -17,12 +17,34 @@ data class TimeSpend(val totalMinutes: Long) {
         private const val MINUTES_IN_DAY = 8 * MINUTES_IN_HOUR
         private const val MINUTES_IN_WEEK = 5 * MINUTES_IN_DAY
         private const val MINUTES_IN_MONTH = 4 * MINUTES_IN_WEEK
+        private val validTimeSpendRegex = """^(?:\d+(?:mo|h|d|w|m) )*(?:\d+(?:mo|h|d|w|m))$""".toRegex()
+        private val timeUnitRegex = """(mo|h|d|w|m)""".toRegex()
 
         val NONE = TimeSpend(0)
 
+        /**
+         * Returns true if the given string is a valid GitLab time spend string
+         */
+        fun isValidTimeSpend(inputString: String): Boolean {
+            if (!validTimeSpendRegex.matches(inputString)) return false
+            val uniqueLetterCounts = timeUnitRegex.findAll(inputString).fold(mutableMapOf<String, Int>()) { unitCounts, matchResult ->
+                unitCounts[matchResult.groupValues[0]] = 1 + unitCounts.getOrDefault(matchResult.groupValues[0], 0)
+                return@fold unitCounts
+            }
+
+            return !uniqueLetterCounts.values.any { it > 1 }
+        }
+
+        /**
+         * Creates a TimeSpend from a period
+         */
         fun fromPeriod(period: Period): TimeSpend {
             return TimeSpend(period.toStandardDuration().standardMinutes)
         }
+
+        /**
+         * Creates a TimeSpend from a valid GitLab time spend string
+         */
         fun fromString(timeSpendStr: String): TimeSpend {
             val splitUpString = timeSpendStr.split(" ")
             val totalMinutes = splitUpString.map { convertToMinutes(it) }.reduce { total, value -> total + value }
@@ -41,6 +63,9 @@ data class TimeSpend(val totalMinutes: Long) {
         }
     }
 
+    /**
+     * Converts this TimeSpend to a valid GitLab time spend string
+     */
     override fun toString() = buildString {
         if (totalMinutes == 0L) {
             append("0m")
