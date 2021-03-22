@@ -1,4 +1,4 @@
-@file:Suppress("ClassName")
+@file:Suppress("ClassName", "PackageDirectoryMismatch")
 
 package edu.erittenhouse.gitlabtimetracker.controller
 
