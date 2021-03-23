@@ -7,6 +7,12 @@ using the built-in time spend functionality (i.e. `/spend 30m` on an issue). You
 an issue for a project you're a part of and the tracker will begin recording the amount of time you spend.
 When you click "stop", it immediately records the time spent on the issue in GitLab.
 
+It also has features like:
+* Rich and fast filtering of issues for a given project by title, issue number, and milestone
+* Slack integration which can auto-update your Slack status when you're working on a task
+* Progress bars on issues that have both a time estimate and spend for ease of checking how far along you are on an issue
+* Links on every project or issue so you can jump straight from the Time Tracker to GitLab if you need to!
+
 Pull requests are welcome! This project uses Coroutines and TornadoFX.
 
 ## Getting started
