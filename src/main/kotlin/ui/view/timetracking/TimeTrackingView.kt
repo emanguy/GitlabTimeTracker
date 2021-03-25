@@ -11,8 +11,11 @@ import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
 import edu.erittenhouse.gitlabtimetracker.ui.util.Debouncer
 import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.showErrorModal
 import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.showErrorModalForIOErrors
+import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.showMultiButtonModal
 import edu.erittenhouse.gitlabtimetracker.ui.util.suspension.SuspendingView
+import edu.erittenhouse.gitlabtimetracker.ui.util.triggers
 import edu.erittenhouse.gitlabtimetracker.ui.view.settings.SettingsView
+import edu.erittenhouse.gitlabtimetracker.util.generateMessageForIOExceptions
 import javafx.geometry.Orientation
 import javafx.scene.layout.Pane
 import javafx.stage.Stage
@@ -23,6 +26,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import tornadofx.*
 import kotlin.coroutines.CoroutineContext
+import kotlin.system.exitProcess
 
 @OptIn(FlowPreview::class)
 class TimeTrackingView : SuspendingView("Gitlab Time Tracker") {
@@ -64,23 +68,9 @@ class TimeTrackingView : SuspendingView("Gitlab Time Tracker") {
         }
         registerBackgroundTaskInit {
             // Load current user data so we can have it ready and display it above the project list
-            launch {
-                when (userController.loadCurrentUser()) {
-                    is UserLoadResult.GotUser -> { /* Good to go! */ }
-                    is UserLoadResult.NoCredentials -> showErrorModal("Something went wrong. We didn't retrieve the credentials from the login page," +
-                            " please notify a developer!")
-                }
-            }
-        }
-        registerBackgroundTaskInit {
+            launch { loadUserData() }
             // Pull in the projects
-            launch {
-                when (projectController.fetchProjects()) {
-                    is ProjectFetchResult.ProjectsRetrieved -> { /* Good to go! */ }
-                    is ProjectFetchResult.NoCredentials -> showErrorModal("Something's wrong. We couldn't read your credentials " +
-                            "when trying to pull the list of projects.")
-                }
-            }
+            launch { loadProjectData() }
         }
         registerBackgroundTaskInit {
             // Listen for user clicking the settings button, show dialog
@@ -99,7 +89,7 @@ class TimeTrackingView : SuspendingView("Gitlab Time Tracker") {
         }
 
         registerCoroutineExceptionHandler { _, exception ->
-            ioErrorDebouncer.runDebounced { showErrorModalForIOErrors(exception) }
+            ioErrorDebouncer.runDebounced { showExceptionAndRetryModal(exception) }
         }
     }
 
@@ -148,5 +138,35 @@ class TimeTrackingView : SuspendingView("Gitlab Time Tracker") {
                     settingsStageCopy.requestFocus()
                 }
             }
+    }
+
+    private suspend fun loadUserData() {
+        when (userController.loadCurrentUser()) {
+            is UserLoadResult.GotUser -> { /* Good to go! */ }
+            is UserLoadResult.NoCredentials -> showErrorModal("Something went wrong. We didn't retrieve the credentials from the login page," +
+                    " please notify a developer!")
+        }
+    }
+
+    private suspend fun loadProjectData() {
+        when (projectController.fetchProjects()) {
+            is ProjectFetchResult.ProjectsRetrieved -> { /* Good to go! */ }
+            is ProjectFetchResult.NoCredentials -> showErrorModal("Something's wrong. We couldn't read your credentials " +
+                    "when trying to pull the list of projects.")
+        }
+    }
+
+    private fun showExceptionAndRetryModal(exception: Throwable) {
+        val errorMessage = generateMessageForIOExceptions(exception)
+
+        showMultiButtonModal(
+            title = "Whoops!",
+            message = errorMessage ?: "We're not sure what went wrong.",
+            "Close App" triggers { exitProcess(0) },
+            "Retry Data Load" triggers {
+                launch { loadUserData() }
+                launch { loadProjectData() }
+            },
+        )
     }
 }
