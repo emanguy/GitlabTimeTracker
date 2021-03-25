@@ -1,6 +1,8 @@
 package edu.erittenhouse.gitlabtimetracker.ui.util.extensions
 
+import edu.erittenhouse.gitlabtimetracker.ui.fragment.MultiButtonDialogFragment
 import edu.erittenhouse.gitlabtimetracker.ui.fragment.OKDialogFragment
+import edu.erittenhouse.gitlabtimetracker.ui.util.NamedCallback
 import edu.erittenhouse.gitlabtimetracker.ui.util.PopupCallback
 import edu.erittenhouse.gitlabtimetracker.util.generateMessageForIOExceptions
 import javafx.stage.Stage
@@ -29,3 +31,13 @@ fun Component.showErrorModal(errorMessage: String?, okAction: PopupCallback = {}
  */
 fun Component.showErrorModalForIOErrors(e: Throwable) = showErrorModal(generateMessageForIOExceptions(e))
 
+/**
+ * Shows a modal dialog with a certain [title] and [message], specifying [buttons][modalButtons] that can be triggered on the modal
+ */
+fun Component.showMultiButtonModal(title: String, message: String, vararg modalButtons: NamedCallback): Stage? {
+    return find<MultiButtonDialogFragment>(
+        "modalTitle" to title,
+        "message" to message,
+        "buttonsAndActions" to modalButtons.toList()
+    ).openModal()
+}
