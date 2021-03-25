@@ -18,7 +18,7 @@ Pull requests are welcome! This project uses Coroutines and TornadoFX.
 ## Getting started
 
 First things first, head on over to the [releases page](https://github.com/emanguy/GitlabTimeTracker/releases) for this repo and download the latest version of the
-application.
+application. **Note that this app is built on and for Java 1.8. Newer versions may cause the app to break.**
 
 First, go to Gitlab. This should work both for the public version of GitLab and for private versions.
 
