@@ -5,7 +5,8 @@
 The Gitlab Time Tracker is a GUI tool for recording the amount of time you spend on GitLab issues
 using the built-in time spend functionality (i.e. `/spend 30m` on an issue). You just click "start" on
 an issue for a project you're a part of and the tracker will begin recording the amount of time you spend.
-When you click "stop", it immediately records the time spent on the issue in GitLab.
+When you click "stop", it immediately records the time spent on the issue in GitLab, or you can tweak the
+spent time before submitting.
 
 It also has features like:
 * Rich and fast filtering of issues for a given project by title, issue number, and milestone
