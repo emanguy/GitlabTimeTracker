@@ -4,13 +4,12 @@ import edu.erittenhouse.gitlabtimetracker.controller.result.ProjectFetchResult
 import edu.erittenhouse.gitlabtimetracker.gitlab.GitlabAPI
 import edu.erittenhouse.gitlabtimetracker.io.SettingsManager
 import edu.erittenhouse.gitlabtimetracker.model.Project
-import edu.erittenhouse.gitlabtimetracker.ui.util.suspension.SuspendingController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.javafx.JavaFx
 import kotlinx.coroutines.withContext
 import tornadofx.*
 
-class ProjectController : SuspendingController() {
+class ProjectController : Controller() {
     private val gitlabAPI by inject<GitlabAPI>()
     private val credentialController by inject<CredentialController>()
     private val settings = SettingsManager(find<StorageConfig>().fileLocation)
@@ -25,8 +24,9 @@ class ProjectController : SuspendingController() {
     suspend fun fetchProjects(): ProjectFetchResult {
         val credentials = credentialController.credentials ?: return ProjectFetchResult.NoCredentials
         val pinnedProjectIDs = settings.getPinnedProjects()
-        val fullProjectList = gitlabAPI.project.listUserMemberProjects(credentials).map { Project.fromGitlabDto(it, isPinned = it.id in pinnedProjectIDs) }
-        val (localPinnedProjects, localUnpinnedProjects) = fullProjectList.partition { it.pinned }
+        val (localPinnedProjects, localUnpinnedProjects) = gitlabAPI.project.listUserMemberProjects(credentials).asSequence()
+            .map { Project.fromGitlabDto(it, isPinned = it.id in pinnedProjectIDs) }
+            .partition { it.pinned }
         pinnedProjects = localPinnedProjects
         unpinnedProjects = localUnpinnedProjects
 
@@ -67,6 +67,7 @@ class ProjectController : SuspendingController() {
         val localUnpinnedProjects = unpinnedProjects.toMutableList()
 
         val projectToUnpinIdx = localPinnedProjects.indexOfFirst { it.id == projectID }
+        // If we couldn't find the specified project, just return
         if (projectToUnpinIdx == -1) return
 
         localUnpinnedProjects.add(0, localPinnedProjects.removeAt(projectToUnpinIdx).copy(pinned = false))
