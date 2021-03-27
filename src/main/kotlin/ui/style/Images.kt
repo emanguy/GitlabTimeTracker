@@ -5,6 +5,7 @@ object Images {
     const val loadingPlaceholder = "/LoadingPlaceholder.jpg"
     const val login = "/LogIn.png"
     const val newWindow = "/NewWindow.png"
+    const val pin = "/Pin.png"
     const val play = "/Play.png"
     const val refreshIssues = "/RefreshIssues.png"
     const val searchIssues = "/SearchIssues.png"

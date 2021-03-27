@@ -5,7 +5,7 @@ import edu.erittenhouse.gitlabtimetracker.controller.result.SlackLoginResult
 import edu.erittenhouse.gitlabtimetracker.io.SettingsManager
 import edu.erittenhouse.gitlabtimetracker.model.Issue
 import edu.erittenhouse.gitlabtimetracker.model.SlackCredential
-import edu.erittenhouse.gitlabtimetracker.model.settings.v1.SlackConfig
+import edu.erittenhouse.gitlabtimetracker.model.settings.NewestSlackConfig
 import edu.erittenhouse.gitlabtimetracker.slack.SlackAPI
 import edu.erittenhouse.gitlabtimetracker.slack.result.LoginResult
 import edu.erittenhouse.gitlabtimetracker.ui.util.suspension.SuspendingController
@@ -22,7 +22,7 @@ class SlackController : SuspendingController() {
     private val settingsManager = SettingsManager(find<StorageConfig>().fileLocation)
     private val mutableEnabledState = MutableStateFlow(false)
 
-    var slackConfig: SlackConfig? = null
+    var slackConfig: NewestSlackConfig? = null
         private set
     val enabledState = mutableEnabledState.asStateFlow()
 
@@ -68,7 +68,7 @@ class SlackController : SuspendingController() {
      * Enable the slack integration, using the provided options
      */
     suspend fun enableSlackIntegration(slackCredential: SlackCredential, emoji: String, messageFormat: String) {
-        val newConfig = SlackConfig(slackCredential, emoji, messageFormat)
+        val newConfig = NewestSlackConfig(slackCredential, emoji, messageFormat)
         settingsManager.setSlackConfig(true, newConfig)
         slackConfig = newConfig
         mutableEnabledState.value = true

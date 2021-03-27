@@ -18,6 +18,10 @@ class SettingsManagerTest {
         if (credsFile.exists()) {
             credsFile.delete()
         }
+
+        runBlocking {
+            manager.clearCache()
+        }
     }
 
     @Test
@@ -53,6 +57,21 @@ class SettingsManagerTest {
             } catch (e: Exception) {
                 fail<Unit>("Threw wrong exception")
             }
+        }
+    }
+
+    @Test
+    fun `Clears pinned projects if user switches GitLab instances`() {
+        runBlocking {
+            val credential = GitlabCredential("url", "token")
+            manager.setCredential(credential)
+            manager.setPinnedProjects(setOf(1, 2, 3))
+
+            manager.setCredential(credential.copy(personalAccessToken = "newToken"))
+            assertEquals(3, manager.getPinnedProjects().size)
+
+            manager.setCredential(GitlabCredential("url2", "token2"))
+            assertEquals(0, manager.getPinnedProjects().size)
         }
     }
 }

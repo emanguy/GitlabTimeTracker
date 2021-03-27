@@ -4,11 +4,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import edu.erittenhouse.gitlabtimetracker.io.error.SettingsErrors
 import edu.erittenhouse.gitlabtimetracker.io.result.FileMigrationResult
 import edu.erittenhouse.gitlabtimetracker.io.result.MigrationResult
-import edu.erittenhouse.gitlabtimetracker.model.settings.VersionedSettings
-import edu.erittenhouse.gitlabtimetracker.model.settings.newestMigrationVersion
-import edu.erittenhouse.gitlabtimetracker.model.settings.settingsMigrations
-import edu.erittenhouse.gitlabtimetracker.model.settings.v1.Settings
-import edu.erittenhouse.gitlabtimetracker.model.settings.versionToSettings
+import edu.erittenhouse.gitlabtimetracker.model.settings.*
 import edu.erittenhouse.gitlabtimetracker.util.JsonMapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -52,7 +48,7 @@ suspend fun migrateSettingsFile(fileLocation: String): FileMigrationResult = wit
  *
  * @throws SettingsErrors.ParseError if the settings could not be parsed from the file content
  */
-fun migrateSettings(fileContent: ByteArray): MigrationResult<Settings> {
+fun migrateSettings(fileContent: ByteArray): MigrationResult<NewestSettings> {
     val versionedSettings = try {
         JsonMapper.readValue<VersionedSettings>(fileContent)
     } catch(e: Exception) {
@@ -83,7 +79,7 @@ fun migrateSettings(fileContent: ByteArray): MigrationResult<Settings> {
     }
 
     // Verify we got the correct settings type
-    val convertedSettings = currentSettings as? Settings
+    val convertedSettings = currentSettings as? NewestSettings
         ?: return MigrationResult.MigrationProducedUnexpectedModel(currentSettings.version)
     return MigrationResult.MigrationSucceeded(convertedSettings)
 }
