@@ -1,18 +1,26 @@
 package edu.erittenhouse.gitlabtimetracker.ui.fragment
 
+import edu.erittenhouse.gitlabtimetracker.controller.ProjectController
 import edu.erittenhouse.gitlabtimetracker.model.Project
 import edu.erittenhouse.gitlabtimetracker.ui.style.Images
 import edu.erittenhouse.gitlabtimetracker.ui.style.LayoutStyles
 import edu.erittenhouse.gitlabtimetracker.ui.style.TypographyStyles
 import edu.erittenhouse.gitlabtimetracker.ui.util.extensions.flexspacer
+import edu.erittenhouse.gitlabtimetracker.ui.util.suspension.SuspendingListCellFragment
 import javafx.beans.property.SimpleStringProperty
+import javafx.scene.control.ToggleButton
 import tornadofx.*
 
-class ProjectListCellFragment : ListCellFragment<Project>() {
+class ProjectListCellFragment : SuspendingListCellFragment<Project>() {
     private val projectText = SimpleStringProperty("")
     private val projectDescription = SimpleStringProperty("")
     private val projectGitlabPath = SimpleStringProperty("")
+    private var projectID: Int = -1
     private var projectUrl: String = ""
+    private var projectPinned = false
+
+    private val projectController by inject<ProjectController>()
+    private var pinToggle by singleAssign<ToggleButton>()
 
     init {
         itemProperty.onChange { updateProperties(it) }
@@ -23,6 +31,9 @@ class ProjectListCellFragment : ListCellFragment<Project>() {
         projectText.set("Project: ${newProject.name}")
         setTruncatedDescription(newProject.description)
         projectGitlabPath.set(newProject.gitlabPath)
+        projectPinned = newProject.pinned
+        pinToggle.isSelected = newProject.pinned
+        projectID = newProject.id
         projectUrl = newProject.url.toString()
     }
 
@@ -56,6 +67,15 @@ class ProjectListCellFragment : ListCellFragment<Project>() {
                 addClass(TypographyStyles.metadata)
             }
             flexspacer()
+            pinToggle = togglebutton {
+                tooltip("Pin/unpin project")
+                imageview(Images.pin)
+
+                suspendingAction {
+                    val currentlyPinned = projectPinned
+                    if (currentlyPinned) projectController.unpinProject(projectID) else projectController.pinProject(projectID)
+                }
+            }
             button {
                 tooltip("Go to project")
                 imageview(Images.newWindow)

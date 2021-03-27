@@ -5,7 +5,7 @@ import edu.erittenhouse.gitlabtimetracker.controller.result.SlackLoginResult
 import edu.erittenhouse.gitlabtimetracker.io.SettingsManager
 import edu.erittenhouse.gitlabtimetracker.model.Issue
 import edu.erittenhouse.gitlabtimetracker.model.SlackCredential
-import edu.erittenhouse.gitlabtimetracker.model.settings.v1.SlackConfig
+import edu.erittenhouse.gitlabtimetracker.model.settings.v2.SlackConfig
 import edu.erittenhouse.gitlabtimetracker.slack.SlackAPI
 import edu.erittenhouse.gitlabtimetracker.slack.result.LoginResult
 import edu.erittenhouse.gitlabtimetracker.ui.util.suspension.SuspendingController

@@ -3,6 +3,7 @@ package edu.erittenhouse.gitlabtimetracker.controller
 import edu.erittenhouse.gitlabtimetracker.controller.result.ProjectFetchResult
 import edu.erittenhouse.gitlabtimetracker.gitlab.dto.GitlabProject
 import edu.erittenhouse.gitlabtimetracker.gitlab.dto.GitlabUser
+import edu.erittenhouse.gitlabtimetracker.io.SettingsManager
 import edu.erittenhouse.gitlabtimetracker.model.GitlabCredential
 import edu.erittenhouse.gitlabtimetracker.util.CREDENTIAL_FILE_LOCATION
 import edu.erittenhouse.gitlabtimetracker.util.generateTestGitlabScope
@@ -11,9 +12,10 @@ import edu.erittenhouse.gitlabtimetracker.util.gitlabmock.GitlabMock
 import edu.erittenhouse.gitlabtimetracker.util.gitlabmock.ProjectMock
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import tornadofx.find
+import tornadofx.*
 import java.io.File
 
 class ProjectControllerTest {
@@ -72,6 +74,10 @@ class ProjectControllerTest {
     @AfterEach
     fun `Clean up config file`() {
         File(CREDENTIAL_FILE_LOCATION).delete()
+
+        runBlocking {
+            SettingsManager(CREDENTIAL_FILE_LOCATION).clearCache()
+        }
     }
 
     @Test
@@ -92,6 +98,60 @@ class ProjectControllerTest {
             val projectFetchResult = controller.fetchProjects()
             assert(projectFetchResult == ProjectFetchResult.ProjectsRetrieved)
             assert(controller.projects.size == gitlabState.projects.size)
+        }
+    }
+
+    @Test
+    fun `Pinning a project sends it to the end of the pins`() {
+        runBlocking {
+            val credentialStoreSuccess = credentialController.tryAddCredentials(GitlabCredential("https://fake.gitlab", "jdoe-creds"))
+            assertTrue(credentialStoreSuccess)
+
+            val projectFetchResult = controller.fetchProjects()
+            assert(projectFetchResult == ProjectFetchResult.ProjectsRetrieved)
+
+            controller.pinProject(spaceProject.projectData.id)
+            controller.pinProject(mediocreProject.projectData.id)
+
+            assertEquals(listOf(spaceProject.projectData.id, mediocreProject.projectData.id, neatProject.projectData.id), controller.projects.map { it.id })
+            assertEquals(listOf(true, true, false), controller.projects.map { it.pinned })
+        }
+    }
+
+    @Test
+    fun `Unpinning a project sends it to the beginning of the unpinned`() {
+        runBlocking {
+            val credentialStoreSuccess = credentialController.tryAddCredentials(GitlabCredential("https://fake.gitlab", "jdoe-creds"))
+            assertTrue(credentialStoreSuccess)
+
+            val projectFetchResult = controller.fetchProjects()
+            assert(projectFetchResult == ProjectFetchResult.ProjectsRetrieved)
+
+            controller.pinProject(spaceProject.projectData.id)
+            controller.pinProject(mediocreProject.projectData.id)
+            controller.unpinProject(spaceProject.projectData.id)
+            controller.unpinProject(mediocreProject.projectData.id)
+
+            assertEquals(listOf(mediocreProject.projectData.id, spaceProject.projectData.id, neatProject.projectData.id), controller.projects.map { it.id })
+            assertEquals(listOf(false, false, false), controller.projects.map { it.pinned })
+        }
+    }
+
+    @Test
+    fun `Pinned projects appear in front after another fetch from GitLab`() {
+        runBlocking {
+            val credentialStoreSuccess = credentialController.tryAddCredentials(GitlabCredential("https://fake.gitlab", "jdoe-creds"))
+            assertTrue(credentialStoreSuccess)
+
+            val projectFetchResult = controller.fetchProjects()
+            assert(projectFetchResult == ProjectFetchResult.ProjectsRetrieved)
+
+            controller.pinProject(spaceProject.projectData.id)
+            val secondFetchResult = controller.fetchProjects()
+            assert(secondFetchResult == ProjectFetchResult.ProjectsRetrieved)
+
+            assertEquals(listOf(spaceProject.projectData.id, neatProject.projectData.id, mediocreProject.projectData.id), controller.projects.map { it.id })
+            assertEquals(listOf(true, false, false), controller.projects.map { it.pinned })
         }
     }
 }
